@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin — Apartamentos{% endblock %}
+
+{% block body %}
+    <div class="page-header">
+        <h1>Panel de administración</h1>
+        <p>Gestiona todos los apartamentos del sistema</p>
+    </div>
+
+    {% if apartments is empty %}
+        <div class="table-card">
+            <div class="empty-state">
+                <div class="icon">🏢</div>
+                <p>No hay apartamentos registrados todavía.</p>
+            </div>
+        </div>
+    {% else %}
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Dirección</th>
+                        <th>Precio</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for apartment in apartments %}
+                        <tr>
+                            <td>{{ apartment.id }}</td>
+                            <td>{{ apartment.name }}</td>
+                            <td>{{ apartment.address }}</td>
+                            <td class="price">{{ apartment.price|number_format(0, ',', '.') }} €/mes</td>
+                            <td>
+                                {% if apartment.available %}
+                                    <span class="badge badge-available">Disponible</span>
+                                {% else %}
+                                    <span class="badge badge-unavailable">No disponible</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ path('apartment_edit', {id: apartment.id}) }}" class="btn-edit">
+                                    ✏️ Editar
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}
