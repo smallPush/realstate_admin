@@ -1,19 +1,20 @@
 <?php
 
-namespace App\Service;
+namespace App\Infrastructure\Vapi;
 
-use App\Repository\ApartmentRepository;
+use App\Domain\Apartment\ApartmentRepositoryInterface;
+use App\Domain\Apartment\VapiKnowledgeBaseServiceInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class VapiKnowledgeBaseService
+class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
 {
     private string $apiKey;
     private string $fileIdPath;
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
-        private readonly ApartmentRepository $apartmentRepository,
+        private readonly ApartmentRepositoryInterface $apartmentRepository,
         private readonly LoggerInterface $logger,
         string $vapiApiKey,
         string $shareDir,

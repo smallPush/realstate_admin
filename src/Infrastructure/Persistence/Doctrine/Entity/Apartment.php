@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Entity;
+namespace App\Infrastructure\Persistence\Doctrine\Entity;
 
-use App\Repository\ApartmentRepository;
+use App\Infrastructure\Persistence\Doctrine\Repository\ApartmentRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ApartmentRepository::class)]

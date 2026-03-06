@@ -44,6 +44,9 @@ This is a Symfony-based real estate management backend designed to provide apart
    ```bash
    cp .env .env.local
    ```
+   **Required variables in `.env` (or `.env.local`):**
+   - `DATABASE_URL`: Connection string for the PostgreSQL database (e.g., `postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8`).
+   - `VAPI_API_KEY`: The API key to communicate with Vapi for the Knowledge Base integration.
 
 4. **Start the Database**:
    ```bash
