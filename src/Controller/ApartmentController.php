@@ -15,6 +15,12 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ApartmentController extends AbstractController
 {
+    public function __construct(
+        private readonly UpdateApartmentCommand $updateApartmentCommand,
+        private readonly SyncKnowledgeBaseCommand $syncKnowledgeBaseCommand,
+    ) {
+    }
+
     // ── Public route ─────────────────────────────────────────────────
     #[Route('/apartments', name: 'apartment_public_list', methods: ['GET'])]
     public function publicList(GetAllApartmentsQuery $getAllApartmentsQuery): Response
@@ -41,8 +47,6 @@ class ApartmentController extends AbstractController
     public function edit(
         Request $request,
         DoctrineApartment $doctrineApartment,
-        UpdateApartmentCommand $updateApartmentCommand,
-        SyncKnowledgeBaseCommand $syncKnowledgeBaseCommand,
     ): Response {
         $form = $this->createForm(ApartmentType::class, $doctrineApartment);
         $form->handleRequest($request);
@@ -57,10 +61,10 @@ class ApartmentController extends AbstractController
                 $doctrineApartment->getId()
             );
 
-            $updateApartmentCommand->execute($domainApartment);
+            $this->updateApartmentCommand->execute($domainApartment);
 
             // Sync updated apartments to Vapi Knowledge Base
-            $syncKnowledgeBaseCommand->execute();
+            $this->syncKnowledgeBaseCommand->execute();
 
             $this->addFlash('success', 'Apartamento actualizado correctamente.');
 
