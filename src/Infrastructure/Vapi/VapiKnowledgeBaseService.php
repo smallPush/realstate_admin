@@ -46,37 +46,23 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
 
     private function generateDocument(): string
     {
-        $apartments = $this->apartmentRepository->findAll();
+        $availableApartments = $this->apartmentRepository->findAvailable();
 
         $lines = ["=== Base de Conocimiento: Apartamentos ===", ""];
         $lines[] = "Fecha de actualización: " . (new \DateTimeImmutable())->format('d/m/Y H:i');
-        $lines[] = "Total de apartamentos: " . count($apartments);
+        $lines[] = "Total de apartamentos disponibles: " . count($availableApartments);
         $lines[] = "";
         $lines[] = "---";
-        $lines[] = "";
-
-        foreach ($apartments as $apartment) {
-            $available = $apartment->isAvailable() ? 'Sí' : 'No';
-            $lines[] = "Apartamento: " . $apartment->getName();
-            $lines[] = "  Dirección: " . $apartment->getAddress();
-            $lines[] = "  Precio: " . number_format($apartment->getPrice(), 0, ',', '.') . " €/mes";
-            $lines[] = "  Disponible: " . $available;
-            $lines[] = "";
-        }
-
-        // Summary of available apartments
-        $availableApartments = array_filter(
-            $apartments,
-            fn($a) => $a->isAvailable()
-        );
-
-        $lines[] = "---";
-        $lines[] = "";
-        $lines[] = "Resumen: Hay " . count($availableApartments) . " apartamentos disponibles de un total de " . count($apartments) . ".";
         $lines[] = "";
         $lines[] = "Apartamentos disponibles:";
+        $lines[] = "";
+
         foreach ($availableApartments as $apt) {
-            $lines[] = "  - " . $apt->getName() . " (" . $apt->getAddress() . ") por " . number_format($apt->getPrice(), 0, ',', '.') . " €/mes";
+            $lines[] = "Apartamento: " . $apt->getName();
+            $lines[] = "  Dirección: " . $apt->getAddress();
+            $lines[] = "  Precio: " . number_format($apt->getPrice(), 0, ',', '.') . " €/mes";
+            $lines[] = "  Disponible: Sí";
+            $lines[] = "";
         }
 
         return implode("\n", $lines);
