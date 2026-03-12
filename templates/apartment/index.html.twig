@@ -34,6 +34,7 @@
                             <td>{{ apartment.id }}</td>
                             <td>{{ apartment.name }}</td>
                             <td>{{ apartment.address }}</td>
+                            <td class="text-secondary" style="font-size: 0.85rem;">{{ apartment.description|slice(0, 50) }}{{ apartment.description|length > 50 ? '...' : '' }}</td>
                             <td class="price">{{ apartment.price|number_format(0, ',', '.') }} €/mes</td>
                             <td>
                                 {% if apartment.available %}

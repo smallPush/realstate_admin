@@ -58,7 +58,8 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
         $doctrineApartment->setName($domainApartment->getName());
         $doctrineApartment->setAddress($domainApartment->getAddress());
         $doctrineApartment->setPrice($domainApartment->getPrice());
-        $doctrineApartment->setAvailable($domainApartment->isAvailable());
+        $doctrineApartment->setIsAvailable($domainApartment->isAvailable());
+        $doctrineApartment->setDescription($domainApartment->getDescription());
 
         $em->persist($doctrineApartment);
         $em->flush();
@@ -83,7 +84,8 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
             $doctrineApartment->getAddress(),
             $doctrineApartment->getPrice(),
             $doctrineApartment->isAvailable(),
-            $doctrineApartment->getId()
+            $doctrineApartment->getId(),
+            $doctrineApartment->getDescription()
         );
     }
 

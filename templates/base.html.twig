@@ -441,10 +441,9 @@
     <nav class="navbar">
         <a href="{{ path('apartment_public_list') }}" class="navbar-brand">
             <span class="icon">🏠</span>
-            Real Estate Admin
+            Apartamentos
         </a>
         <div class="nav-links">
-            <a href="{{ path('apartment_public_list') }}">Apartamentos</a>
             {% if is_granted('ROLE_ADMIN') %}
                 <a href="{{ path('apartment_admin_index') }}">Panel Admin</a>
                 <a href="{{ path('app_logout') }}" style="color: var(--danger);">Cerrar sesión</a>

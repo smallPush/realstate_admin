@@ -30,11 +30,11 @@ class SeedApartmentsCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $apartments = [
-            ['name' => 'Piso Centro', 'address' => 'Calle Mayor 1', 'price' => 1200, 'isAvailable' => true],
-            ['name' => 'Ático con vistas', 'address' => 'Avenida de América 23', 'price' => 1800, 'isAvailable' => true],
-            ['name' => 'Estudio Económico', 'address' => 'Callejón del Gato 5', 'price' => 600, 'isAvailable' => true],
-            ['name' => 'Chalet Afueras', 'address' => 'Urbanización El Bosque 10', 'price' => 2500, 'isAvailable' => false],
-            ['name' => 'Piso Universitario', 'address' => 'Avenida Complutense 45', 'price' => 800, 'isAvailable' => true],
+            ['name' => 'Piso Centro', 'address' => 'Calle Mayor 1', 'price' => 1200, 'isAvailable' => true, 'description' => 'Elegante piso en el corazón de la ciudad, ideal para parejas.'],
+            ['name' => 'Ático con vistas', 'address' => 'Avenida de América 23', 'price' => 1800, 'isAvailable' => true, 'description' => 'Espectacular ático con terraza de 40m2 y vistas a la sierra.'],
+            ['name' => 'Estudio Económico', 'address' => 'Callejón del Gato 5', 'price' => 600, 'isAvailable' => true, 'description' => 'Pequeño pero acogedor estudio, perfecto para estudiantes.'],
+            ['name' => 'Chalet Afueras', 'address' => 'Urbanización El Bosque 10', 'price' => 2500, 'isAvailable' => false, 'description' => 'Gran chalet independiente con piscina privada y jardín.'],
+            ['name' => 'Piso Universitario', 'address' => 'Avenida Complutense 45', 'price' => 800, 'isAvailable' => true, 'description' => 'Piso luminoso cerca de la facultad, con 3 habitaciones.'],
         ];
 
         foreach ($apartments as $aptData) {
@@ -42,7 +42,8 @@ class SeedApartmentsCommand extends Command
             $apartment->setName($aptData['name']);
             $apartment->setAddress($aptData['address']);
             $apartment->setPrice($aptData['price']);
-            $apartment->setAvailable($aptData['isAvailable']);
+            $apartment->setIsAvailable($aptData['isAvailable']);
+            $apartment->setDescription($aptData['description']);
 
             $this->entityManager->persist($apartment);
         }

@@ -59,6 +59,9 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
             $available = $apartment->isAvailable() ? 'Sí' : 'No';
             $lines[] = "Apartamento: " . $apartment->getName();
             $lines[] = "  Dirección: " . $apartment->getAddress();
+            if ($apartment->getDescription()) {
+                $lines[] = "  Descripción: " . $apartment->getDescription();
+            }
             $lines[] = "  Precio: " . number_format($apartment->getPrice(), 0, ',', '.') . " €/mes";
             $lines[] = "  Disponible: " . $available;
             $lines[] = "";

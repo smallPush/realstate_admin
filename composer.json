@@ -17,14 +17,14 @@
         "symfony/security-bundle": "^7.4",
         "symfony/twig-bundle": "7.4.*",
         "symfony/validator": "7.4.*",
-        "symfony/yaml": "7.4.*"
+        "symfony/yaml": "7.4.*",
+        "symfony/http-client": "7.4.*"
     },
     "require-dev": {
         "doctrine/doctrine-bundle": "^2.18",
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.6",
         "phpunit/phpunit": "*",
-        "symfony/http-client": "7.4.*",
         "symfony/maker-bundle": "^1.66",
         "symfony/phpunit-bridge": "*",
         "symfony/property-access": "7.4.*",

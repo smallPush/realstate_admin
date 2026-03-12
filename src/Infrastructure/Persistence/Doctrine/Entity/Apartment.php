@@ -25,6 +25,9 @@ class Apartment
     #[ORM\Column]
     private ?int $price = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -59,7 +62,7 @@ class Apartment
         return $this->isAvailable;
     }
 
-    public function setAvailable(bool $isAvailable): static
+    public function setIsAvailable(bool $isAvailable): static
     {
         $this->isAvailable = $isAvailable;
 
@@ -74,6 +77,18 @@ class Apartment
     public function setPrice(int $price): static
     {
         $this->price = $price;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $this->description = $description;
 
         return $this;
     }
