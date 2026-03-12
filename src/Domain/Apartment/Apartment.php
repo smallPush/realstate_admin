@@ -4,12 +4,7 @@ namespace App\Domain\Apartment;
 
 class Apartment
 {
-    private ?int $id;
-    private string $name;
-    private string $address;
-    private bool $isAvailable;
-    private int $price;
-    private ?string $description;
+    private ?\DateTimeImmutable $vapiSyncedAt;
 
     public function __construct(
         string $name,
@@ -17,7 +12,8 @@ class Apartment
         int $price,
         bool $isAvailable = true,
         ?int $id = null,
-        ?string $description = null
+        ?string $description = null,
+        ?\DateTimeImmutable $vapiSyncedAt = null
     ) {
         $this->name = $name;
         $this->address = $address;
@@ -25,6 +21,7 @@ class Apartment
         $this->isAvailable = $isAvailable;
         $this->id = $id;
         $this->description = $description;
+        $this->vapiSyncedAt = $vapiSyncedAt;
     }
 
     public function getId(): ?int
@@ -72,13 +69,13 @@ class Apartment
         $this->price = $price;
     }
 
-    public function getDescription(): ?string
+    public function getVapiSyncedAt(): ?\DateTimeImmutable
     {
-        return $this->description;
+        return $this->vapiSyncedAt;
     }
 
-    public function setDescription(?string $description): void
+    public function setVapiSyncedAt(?\DateTimeImmutable $vapiSyncedAt): void
     {
-        $this->description = $description;
+        $this->vapiSyncedAt = $vapiSyncedAt;
     }
 }

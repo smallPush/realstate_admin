@@ -35,19 +35,29 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         }
 
         // 1. Generate the document content
-        $content = $this->generateDocument();
+        $availableApartments = $this->apartmentRepository->findAvailable();
+        $content = $this->generateDocument($availableApartments);
 
         // 2. Delete the previous file if it exists
         $this->deletePreviousFile();
 
         // 3. Upload the new file
-        $this->uploadFile($content);
+        $success = $this->uploadFile($content);
+
+        if ($success) {
+            $now = new \DateTimeImmutable();
+            foreach ($availableApartments as $apt) {
+                $apt->setVapiSyncedAt($now);
+                $this->apartmentRepository->save($apt);
+            }
+        }
     }
 
-    private function generateDocument(): string
+    /**
+     * @param \App\Domain\Apartment\Apartment[] $availableApartments
+     */
+    private function generateDocument(array $availableApartments): string
     {
-        $availableApartments = $this->apartmentRepository->findAvailable();
-
         $lines = ["=== Base de Conocimiento: Apartamentos ===", ""];
         $lines[] = "Fecha de actualización: " . (new \DateTimeImmutable())->format('d/m/Y H:i');
         $lines[] = "Total de apartamentos disponibles: " . count($availableApartments);
@@ -95,7 +105,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         }
     }
 
-    private function uploadFile(string $content): void
+    private function uploadFile(string $content): bool
     {
         // Write content to a temp file for multipart upload
         $tmpFile = tempnam(sys_get_temp_dir(), 'vapi_kb_');
@@ -103,6 +113,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         rename($tmpFile, $tmpFilePath);
         file_put_contents($tmpFilePath, $content);
 
+        $success = false;
         try {
             $response = $this->httpClient->request('POST', 'https://api.vapi.ai/file', [
                 'headers' => [
@@ -124,6 +135,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
 
                 file_put_contents($this->fileIdPath, $data['id']);
                 $this->logger->info('Vapi: uploaded KB file with id {fileId}', ['fileId' => $data['id']]);
+                $success = true;
             } else {
                 $this->logger->error('Vapi: upload response did not contain file id', ['response' => $data]);
             }
@@ -134,5 +146,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
                 unlink($tmpFilePath);
             }
         }
+
+        return $success;
     }
 }

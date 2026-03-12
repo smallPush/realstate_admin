@@ -60,6 +60,7 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
         $doctrineApartment->setPrice($domainApartment->getPrice());
         $doctrineApartment->setIsAvailable($domainApartment->isAvailable());
         $doctrineApartment->setDescription($domainApartment->getDescription());
+        $doctrineApartment->setVapiSyncedAt($domainApartment->getVapiSyncedAt());
 
         $em->persist($doctrineApartment);
         $em->flush();
@@ -85,7 +86,8 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
             $doctrineApartment->getPrice(),
             $doctrineApartment->isAvailable(),
             $doctrineApartment->getId(),
-            $doctrineApartment->getDescription()
+            $doctrineApartment->getDescription(),
+            $doctrineApartment->getVapiSyncedAt()
         );
     }
 

@@ -28,6 +28,9 @@ class Apartment
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $vapiSyncedAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -89,6 +92,18 @@ class Apartment
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getVapiSyncedAt(): ?\DateTimeImmutable
+    {
+        return $this->vapiSyncedAt;
+    }
+
+    public function setVapiSyncedAt(?\DateTimeImmutable $vapiSyncedAt): static
+    {
+        $this->vapiSyncedAt = $vapiSyncedAt;
 
         return $this;
     }
