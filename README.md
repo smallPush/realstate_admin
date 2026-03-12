@@ -65,7 +65,13 @@ This is a Symfony-based real estate management backend designed to provide apart
    php bin/console app:seed-apartments
    ```
 
-7. **Start the Web Server**:
+7. **Create an Admin User**:
+   To access the admin panel, you need an admin user:
+   ```bash
+   php bin/console app:create-admin <username> <password>
+   ```
+
+8. **Start the Web Server**:
    If using the Symfony CLI:
    ```bash
    symfony serve -d
@@ -114,4 +120,5 @@ When the user asks for available apartments, Vapi will call this endpoint, and t
 ## Console Commands
 
 - `php bin/console app:seed-apartments`: Populates the database with example data.
+- `php bin/console app:create-admin <username> <password>`: Creates a new admin user or updates the password if it already exists.
 - `php bin/console doctrine:schema:update --force`: Updates the database schema manually (use migrations for production).
