@@ -22,7 +22,7 @@ class ApartmentController extends AbstractController
     }
 
     // ── Public route ─────────────────────────────────────────────────
-    #[Route('/apartments', name: 'apartment_public_list', methods: ['GET'])]
+    #[Route('/', name: 'apartment_public_list', methods: ['GET'])]
     public function publicList(GetAllApartmentsQuery $getAllApartmentsQuery): Response
     {
         $apartments = $getAllApartmentsQuery->execute();

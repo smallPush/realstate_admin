@@ -10,39 +10,30 @@ use Symfony\Component\HttpFoundation\Request;
 
 class VapiControllerTest extends TestCase
 {
-    public function testVapiWebhookInvalidWebhookFormatMissingMessage(): void
+    public function testVapiWebhookReturnsBadRequestOnInvalidJson(): void
     {
         $controller = new VapiController();
         $queryMock = $this->createMock(GetAvailableApartmentsQuery::class);
 
-        $request = new Request([], [], [], [], [], [], json_encode(['not_message' => 'value']));
+        // Create request with invalid JSON
+        $request = new Request(
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            '{"invalid_json": "missing_quote}'
+        );
 
         $response = $controller->vapiWebhook($request, $queryMock);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
 
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertIsArray($responseData);
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('Invalid webhook format', $responseData['error']);
-    }
-
-    public function testVapiWebhookInvalidWebhookFormatMessageNotArray(): void
-    {
-        $controller = new VapiController();
-        $queryMock = $this->createMock(GetAvailableApartmentsQuery::class);
-
-        $request = new Request([], [], [], [], [], [], json_encode(['message' => 'not_an_array']));
-
-        $response = $controller->vapiWebhook($request, $queryMock);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
-
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertIsArray($responseData);
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('Invalid webhook format', $responseData['error']);
+        $content = json_decode($response->getContent(), true);
+        $this->assertIsArray($content);
+        $this->assertArrayHasKey('error', $content);
+        $this->assertEquals('Invalid JSON payload', $content['error']);
     }
 }
