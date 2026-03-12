@@ -4,6 +4,12 @@ namespace App\Domain\Apartment;
 
 class Apartment
 {
+    private ?int $id;
+    private string $name;
+    private string $address;
+    private bool $isAvailable;
+    private int $price;
+    private ?string $description;
     private ?\DateTimeImmutable $vapiSyncedAt;
 
     public function __construct(
@@ -67,6 +73,16 @@ class Apartment
     public function setPrice(int $price): void
     {
         $this->price = $price;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
     }
 
     public function getVapiSyncedAt(): ?\DateTimeImmutable

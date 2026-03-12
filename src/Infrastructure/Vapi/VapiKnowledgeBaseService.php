@@ -5,6 +5,9 @@ namespace App\Infrastructure\Vapi;
 use App\Domain\Apartment\ApartmentRepositoryInterface;
 use App\Domain\Apartment\VapiKnowledgeBaseServiceInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\Exception\ClientException;
+use Symfony\Component\Mime\Part\DataPart;
+use Symfony\Component\Mime\Part\Multipart\FormDataPart;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
@@ -50,6 +53,8 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
                 $apt->setVapiSyncedAt($now);
                 $this->apartmentRepository->save($apt);
             }
+        } else {
+            throw new \RuntimeException('Failed to upload the Knowledge Base file to Vapi. Check the logs for details.');
         }
     }
 
@@ -113,15 +118,18 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         rename($tmpFile, $tmpFilePath);
         file_put_contents($tmpFilePath, $content);
 
+        $formData = new FormDataPart([
+            'file' => DataPart::fromPath($tmpFilePath, 'vapi_kb.txt', 'text/plain')
+        ]);
+
         $success = false;
         try {
+            $headers = $formData->getPreparedHeaders()->toArray();
+            $headers[] = 'Authorization: Bearer ' . $this->apiKey;
+
             $response = $this->httpClient->request('POST', 'https://api.vapi.ai/file', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                ],
-                'body' => [
-                    'file' => fopen($tmpFilePath, 'r'),
-                ],
+                'headers' => $headers,
+                'body' => $formData->bodyToIterable(),
             ]);
 
             $data = $response->toArray();

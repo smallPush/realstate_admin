@@ -121,4 +121,5 @@ When the user asks for available apartments, Vapi will call this endpoint, and t
 
 - `php bin/console app:seed-apartments`: Populates the database with example data.
 - `php bin/console app:create-admin <username> <password>`: Creates a new admin user or updates the password if it already exists.
+- `php bin/console app:vapi-sync`: Manually synchronizes available apartments with the Vapi Knowledge Base.
 - `php bin/console doctrine:schema:update --force`: Updates the database schema manually (use migrations for production).
