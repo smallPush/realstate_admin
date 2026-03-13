@@ -27,5 +27,12 @@ services:
             $vapiApiKey: '%env(VAPI_API_KEY)%'
             $shareDir: '%kernel.project_dir%/%env(APP_SHARE_DIR)%'
 
+    App\Infrastructure\Vapi\VapiAssistantService:
+        arguments:
+            $vapiApiKey: '%env(VAPI_API_KEY)%'
+            $vapiAssistantId: '%env(VAPI_ASSISTANT_ID)%'
+
     App\Domain\Apartment\ApartmentRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\ApartmentRepository'
     App\Domain\Apartment\VapiKnowledgeBaseServiceInterface: '@App\Infrastructure\Vapi\VapiKnowledgeBaseService'
+    App\Domain\Apartment\VapiAssistantServiceInterface: '@App\Infrastructure\Vapi\VapiAssistantService'
+    App\Domain\Apartment\VapiAssistantConfigRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\VapiAssistantConfigRepository'
