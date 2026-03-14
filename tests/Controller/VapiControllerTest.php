@@ -4,6 +4,7 @@ namespace App\Tests\Controller;
 
 use App\Application\Apartment\Query\GetAvailableApartmentsQuery;
 use App\Controller\VapiController;
+use App\Domain\Apartment\Apartment;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
