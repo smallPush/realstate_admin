@@ -11,69 +11,35 @@ use Symfony\Component\HttpFoundation\Request;
 
 class VapiControllerTest extends TestCase
 {
-    public function testGetAvailableApartmentsReturnsSuccess(): void
+    public function testVapiWebhookReturnsUnauthorizedOnMissingSecret(): void
     {
         $controller = new VapiController();
         $queryMock = $this->createMock(GetAvailableApartmentsQuery::class);
 
-        $apartment1 = new Apartment('Apartment 1', 'Address 1', 1000, true, 1);
-        $apartment2 = new Apartment('Apartment 2', 'Address 2', 1500, true, 2);
+        $request = new Request();
+        // Secret is configured as 'test_secret' but not provided in headers
 
-        $queryMock->expects($this->once())
-            ->method('execute')
-            ->willReturn([$apartment1, $apartment2]);
-
-        $response = $controller->getAvailableApartments($queryMock);
+        $response = $controller->vapiWebhook($request, $queryMock, 'test_secret');
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(JsonResponse::HTTP_OK, $response->getStatusCode());
+        $this->assertEquals(JsonResponse::HTTP_UNAUTHORIZED, $response->getStatusCode());
 
         $content = json_decode($response->getContent(), true);
-
-        $this->assertIsArray($content);
-        $this->assertArrayHasKey('status', $content);
-        $this->assertEquals('success', $content['status']);
-
-        $this->assertArrayHasKey('message', $content);
-        $this->assertEquals('Estos son los pisos disponibles.', $content['message']);
-
-        $this->assertArrayHasKey('data', $content);
-        $this->assertCount(2, $content['data']);
-
-        $this->assertEquals(1, $content['data'][0]['id']);
-        $this->assertEquals('Apartment 1', $content['data'][0]['name']);
-        $this->assertEquals('Address 1', $content['data'][0]['address']);
-        $this->assertEquals(1000, $content['data'][0]['price']);
-
-        $this->assertEquals(2, $content['data'][1]['id']);
-        $this->assertEquals('Apartment 2', $content['data'][1]['name']);
-        $this->assertEquals('Address 2', $content['data'][1]['address']);
-        $this->assertEquals(1500, $content['data'][1]['price']);
+        $this->assertEquals('Unauthorized', $content['error']);
     }
 
-    public function testGetAvailableApartmentsReturnsEmptyList(): void
+    public function testVapiWebhookReturnsUnauthorizedOnInvalidSecret(): void
     {
         $controller = new VapiController();
         $queryMock = $this->createMock(GetAvailableApartmentsQuery::class);
 
-        $queryMock->expects($this->once())
-            ->method('execute')
-            ->willReturn([]);
+        $request = new Request();
+        $request->headers->set('x-vapi-secret', 'wrong_secret');
 
-        $response = $controller->getAvailableApartments($queryMock);
+        $response = $controller->vapiWebhook($request, $queryMock, 'test_secret');
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(JsonResponse::HTTP_OK, $response->getStatusCode());
-
-        $content = json_decode($response->getContent(), true);
-
-        $this->assertIsArray($content);
-        $this->assertArrayHasKey('status', $content);
-        $this->assertEquals('success', $content['status']);
-
-        $this->assertArrayHasKey('data', $content);
-        $this->assertIsArray($content['data']);
-        $this->assertCount(0, $content['data']);
+        $this->assertEquals(JsonResponse::HTTP_UNAUTHORIZED, $response->getStatusCode());
     }
 
     public function testVapiWebhookReturnsBadRequestOnInvalidJson(): void
@@ -81,18 +47,18 @@ class VapiControllerTest extends TestCase
         $controller = new VapiController();
         $queryMock = $this->createMock(GetAvailableApartmentsQuery::class);
 
-        // Create request with invalid JSON
+        // Create request with invalid JSON and valid secret
         $request = new Request(
             [],
             [],
             [],
             [],
             [],
-            [],
+            ['HTTP_x-vapi-secret' => 'test_secret'],
             '{"invalid_json": "missing_quote}'
         );
 
-        $response = $controller->vapiWebhook($request, $queryMock);
+        $response = $controller->vapiWebhook($request, $queryMock, 'test_secret');
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertEquals(JsonResponse::HTTP_BAD_REQUEST, $response->getStatusCode());
