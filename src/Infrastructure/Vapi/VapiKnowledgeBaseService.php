@@ -104,7 +104,9 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
             $this->logger->warning('Vapi: could not delete previous file: {error}', ['error' => $e->getMessage()]);
         }
 
-        @unlink($this->fileIdPath);
+        if (file_exists($this->fileIdPath)) {
+            unlink($this->fileIdPath);
+        }
     }
 
     private function uploadFile(string $content): void
@@ -142,7 +144,9 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         } catch (\Throwable $e) {
             $this->logger->error('Vapi: failed to upload KB file: {error}', ['error' => $e->getMessage()]);
         } finally {
-            @unlink($tmpFilePath);
+            if (file_exists($tmpFilePath)) {
+                unlink($tmpFilePath);
+            }
         }
     }
 }
