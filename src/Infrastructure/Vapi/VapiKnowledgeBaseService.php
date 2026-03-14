@@ -41,11 +41,20 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         $availableApartments = $this->apartmentRepository->findAvailable();
         $content = $this->generateDocument($availableApartments);
 
-        // 2. Delete the previous file if it exists
-        $this->deletePreviousFile();
+        // 2. Start deleting the previous file if it exists (async)
+        $deleteTask = $this->startDeletingPreviousFile();
 
-        // 3. Upload the new file
-        $success = $this->uploadFile($content);
+        // 3. Start uploading the new file (async)
+        $uploadTask = $this->startUploadingFile($content);
+
+        // 4. Wait for both responses to complete
+        if ($deleteTask) {
+            $this->finishDeletingPreviousFile($deleteTask['response'], $deleteTask['fileId']);
+        }
+        $success = false;
+        if ($uploadTask) {
+            $success = $this->finishUploadingFile($uploadTask['response'], $uploadTask['tmpFilePath']);
+        }
 
         if ($success) {
             $now = new \DateTimeImmutable();
@@ -83,24 +92,39 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         return implode("\n", $lines);
     }
 
-    private function deletePreviousFile(): void
+    /**
+     * @return array{response: \Symfony\Contracts\HttpClient\ResponseInterface, fileId: string}|null
+     */
+    private function startDeletingPreviousFile(): ?array
     {
         if (!file_exists($this->fileIdPath)) {
-            return;
+            return null;
         }
 
         $previousFileId = trim(file_get_contents($this->fileIdPath));
         if (empty($previousFileId)) {
-            return;
+            return null;
         }
 
         try {
-            $this->httpClient->request('DELETE', 'https://api.vapi.ai/file/' . $previousFileId, [
+            $response = $this->httpClient->request('DELETE', 'https://api.vapi.ai/file/' . $previousFileId, [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
                 ],
             ]);
-            $this->logger->info('Vapi: deleted previous file {fileId}', ['fileId' => $previousFileId]);
+            return ['response' => $response, 'fileId' => $previousFileId];
+        } catch (\Throwable $e) {
+            $this->logger->warning('Vapi: could not start deleting previous file: {error}', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    private function finishDeletingPreviousFile(\Symfony\Contracts\HttpClient\ResponseInterface $response, string $fileId): void
+    {
+        try {
+            // Accessing the status code will wait for the response to resolve
+            $response->getStatusCode();
+            $this->logger->info('Vapi: deleted previous file {fileId}', ['fileId' => $fileId]);
         } catch (\Throwable $e) {
             $this->logger->warning('Vapi: could not delete previous file: {error}', ['error' => $e->getMessage()]);
         }
@@ -110,7 +134,10 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         }
     }
 
-    private function uploadFile(string $content): bool
+    /**
+     * @return array{response: \Symfony\Contracts\HttpClient\ResponseInterface, tmpFilePath: string}|null
+     */
+    private function startUploadingFile(string $content): ?array
     {
         // Write content to a temp file for multipart upload
         $tmpFile = tempnam(sys_get_temp_dir(), 'vapi_kb_');
@@ -122,7 +149,6 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
             'file' => DataPart::fromPath($tmpFilePath, 'vapi_kb.txt', 'text/plain')
         ]);
 
-        $success = false;
         try {
             $headers = $formData->getPreparedHeaders()->toArray();
             $headers[] = 'Authorization: Bearer ' . $this->apiKey;
@@ -132,6 +158,20 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
                 'body' => $formData->bodyToIterable(),
             ]);
 
+            return ['response' => $response, 'tmpFilePath' => $tmpFilePath];
+        } catch (\Throwable $e) {
+            $this->logger->error('Vapi: failed to start uploading KB file: {error}', ['error' => $e->getMessage()]);
+            if (file_exists($tmpFilePath)) {
+                unlink($tmpFilePath);
+            }
+            return null;
+        }
+    }
+
+    private function finishUploadingFile(\Symfony\Contracts\HttpClient\ResponseInterface $response, string $tmpFilePath): bool
+    {
+        $success = false;
+        try {
             $data = $response->toArray();
 
             if (isset($data['id'])) {
