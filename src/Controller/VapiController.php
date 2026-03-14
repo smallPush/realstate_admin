@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class VapiController extends AbstractController
 {
@@ -31,8 +32,18 @@ class VapiController extends AbstractController
     }
     
     #[Route('/api/vapi/webhook', name: 'api_vapi_webhook', methods: ['POST'])]
-    public function vapiWebhook(Request $request, GetAvailableApartmentsQuery $getAvailableApartmentsQuery): JsonResponse
-    {
+    public function vapiWebhook(
+        Request $request,
+        GetAvailableApartmentsQuery $getAvailableApartmentsQuery,
+        #[Autowire(env: 'VAPI_WEBHOOK_SECRET')] string $webhookSecret = ''
+    ): JsonResponse {
+        if ($webhookSecret !== '') {
+            $providedSecret = $request->headers->get('x-vapi-secret', '');
+            if (!hash_equals($webhookSecret, $providedSecret)) {
+                return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+            }
+        }
+
         $content = json_decode($request->getContent(), true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
