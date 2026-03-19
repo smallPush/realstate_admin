@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Grupos de Apartamentos{% endblock %}
+
+{% block body %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 1.5rem; color: var(--text-primary); margin: 0;">Grupos de Apartamentos</h1>
+        <a href="{{ path('apartment_group_new') }}" class="btn btn-primary">
+            <span>+</span> Nuevo Grupo
+        </a>
+    </div>
+
+    <div class="table-card">
+        {% if groups|length > 0 %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Grupo Padre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for group in groups %}
+                    <tr>
+                        <td style="color: var(--text-muted);">#{{ group.id }}</td>
+                        <td style="font-weight: 500;">{{ group.name }}</td>
+                        <td>{{ group.parent ? group.parent.name : '-' }}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="{{ path('apartment_group_edit', {'id': group.id}) }}" class="btn-edit">
+                                    Editar
+                                </a>
+                                <form method="post" action="{{ path('apartment_group_delete', {'id': group.id}) }}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este grupo?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ group.id) }}">
+                                    <button class="btn-edit" style="color: var(--danger); border-color: rgba(255, 107, 107, 0.2); background: var(--danger-bg);">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">🏢</div>
+                <p>No hay grupos registrados.</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

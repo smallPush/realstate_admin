@@ -34,6 +34,25 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
     }
 
     /**
+     * @param int[] $groupIds
+     * @return DomainApartment[]
+     */
+    public function findByGroupIds(array $groupIds): array
+    {
+        if (empty($groupIds)) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('a')
+            ->join('a.apartmentGroups', 'g')
+            ->where('g.id IN (:groupIds)')
+            ->setParameter('groupIds', $groupIds);
+
+        $doctrineApartments = $qb->getQuery()->getResult();
+        return array_map([$this, 'toDomain'], $doctrineApartments);
+    }
+
+    /**
      * @return DomainApartment[]
      */
     public function findAvailable(): array
