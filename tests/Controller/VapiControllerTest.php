@@ -11,6 +11,24 @@ use Symfony\Component\HttpFoundation\Request;
 
 class VapiControllerTest extends TestCase
 {
+    public function testVapiWebhookReturnsUnauthorizedOnEmptyConfiguredSecret(): void
+    {
+        $controller = new VapiController();
+        $queryMock = $this->createMock(GetAvailableApartmentsQuery::class);
+
+        $request = new Request();
+        // Even if headers contain a secret, if configured secret is empty it should fail
+        $request->headers->set('x-vapi-secret', 'any_secret');
+
+        $response = $controller->vapiWebhook($request, $queryMock, '');
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(JsonResponse::HTTP_UNAUTHORIZED, $response->getStatusCode());
+
+        $content = json_decode($response->getContent(), true);
+        $this->assertEquals('Unauthorized', $content['error']);
+    }
+
     public function testVapiWebhookReturnsUnauthorizedOnMissingSecret(): void
     {
         $controller = new VapiController();

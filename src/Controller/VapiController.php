@@ -37,11 +37,13 @@ class VapiController extends AbstractController
         GetAvailableApartmentsQuery $getAvailableApartmentsQuery,
         #[Autowire(env: 'VAPI_WEBHOOK_SECRET')] string $webhookSecret = ''
     ): JsonResponse {
-        if ($webhookSecret !== '') {
-            $providedSecret = $request->headers->get('x-vapi-secret', '');
-            if (!hash_equals($webhookSecret, $providedSecret)) {
-                return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
-            }
+        if ($webhookSecret === '') {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $providedSecret = $request->headers->get('x-vapi-secret', '');
+        if (!hash_equals($webhookSecret, $providedSecret)) {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
         $content = json_decode($request->getContent(), true);
