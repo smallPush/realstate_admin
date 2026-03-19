@@ -5,7 +5,6 @@ namespace App\Infrastructure\Vapi;
 use App\Domain\Apartment\ApartmentRepositoryInterface;
 use App\Domain\Apartment\VapiKnowledgeBaseServiceInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpClient\Exception\ClientException;
 use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mime\Part\Multipart\FormDataPart;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
