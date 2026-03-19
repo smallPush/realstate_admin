@@ -16,6 +16,14 @@ class ApartmentType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('apartmentGroups', \Symfony\Bridge\Doctrine\Form\Type\EntityType::class, [
+                'class' => \App\Infrastructure\Persistence\Doctrine\Entity\ApartmentGroup::class,
+                'choice_label' => 'name',
+                'multiple' => true,
+                'expanded' => true,
+                'label' => 'Grupos',
+                'required' => false,
+            ])
             ->add('name', TextType::class, [
                 'label' => 'Nombre',
                 'attr' => ['placeholder' => 'Nombre del apartamento'],

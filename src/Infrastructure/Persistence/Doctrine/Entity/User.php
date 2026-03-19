@@ -28,6 +28,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    #[ORM\ManyToMany(targetEntity: ApartmentGroup::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_apartment_group')]
+    private \Doctrine\Common\Collections\Collection $apartmentGroups;
+
+    public function __construct()
+    {
+        $this->apartmentGroups = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -96,5 +105,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\Collection<int, ApartmentGroup>
+     */
+    public function getApartmentGroups(): \Doctrine\Common\Collections\Collection
+    {
+        return $this->apartmentGroups;
+    }
+
+    public function addApartmentGroup(ApartmentGroup $apartmentGroup): static
+    {
+        if (!$this->apartmentGroups->contains($apartmentGroup)) {
+            $this->apartmentGroups->add($apartmentGroup);
+        }
+
+        return $this;
+    }
+
+    public function removeApartmentGroup(ApartmentGroup $apartmentGroup): static
+    {
+        $this->apartmentGroups->removeElement($apartmentGroup);
+
+        return $this;
     }
 }

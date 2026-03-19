@@ -13,8 +13,12 @@ class GetAllApartmentsQuery
         $this->apartmentRepository = $apartmentRepository;
     }
 
-    public function execute(): array
+    public function execute(?array $groupIds = null): array
     {
+        if ($groupIds !== null) {
+            return $this->apartmentRepository->findByGroupIds($groupIds);
+        }
+
         return $this->apartmentRepository->findAll();
     }
 }

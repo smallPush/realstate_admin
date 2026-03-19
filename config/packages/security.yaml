@@ -29,7 +29,9 @@ security:
         ROLE_PUBLIC: []
 
     access_control:
-        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/admin/users, roles: ROLE_ADMIN }
+        - { path: ^/admin/apartment-groups, roles: ROLE_ADMIN }
+        - { path: ^/admin, roles: ROLE_USER }
 
 when@test:
     security:

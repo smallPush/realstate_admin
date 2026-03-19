@@ -1,0 +1,26 @@
+<<<<<<< SEARCH
+    /**
+     * @return Apartment[]
+     */
+    public function findAll(): array;
+
+    /**
+     * @return Apartment[]
+     */
+    public function findAvailable(): array;
+=======
+    /**
+     * @return Apartment[]
+     */
+    public function findAll(): array;
+
+    /**
+     * @return Apartment[]
+     */
+    public function findByGroups(array $groupIds): array;
+
+    /**
+     * @return Apartment[]
+     */
+    public function findAvailable(): array;
+>>>>>>> REPLACE

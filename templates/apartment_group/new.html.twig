@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nuevo Grupo{% endblock %}
+
+{% block body %}
+    <div style="margin-bottom: 2rem;">
+        <a href="{{ path('apartment_group_index') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ← Volver al listado
+        </a>
+        <h1 style="font-size: 1.5rem; color: var(--text-primary); margin: 0.5rem 0 0 0;">Nuevo Grupo</h1>
+    </div>
+
+    <div class="form-card">
+        {{ form_start(form) }}
+            <div class="form-group">
+                {{ form_label(form.name) }}
+                {{ form_widget(form.name) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.parent) }}
+                {{ form_widget(form.parent) }}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Guardar Grupo</button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

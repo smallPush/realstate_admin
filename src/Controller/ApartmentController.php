@@ -36,7 +36,31 @@ class ApartmentController extends AbstractController
     #[Route('/admin/apartments', name: 'apartment_admin_index', methods: ['GET'])]
     public function index(GetAllApartmentsQuery $getAllApartmentsQuery): Response
     {
-        $apartments = $getAllApartmentsQuery->execute();
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $apartments = $getAllApartmentsQuery->execute();
+        } else {
+            $groupIds = [];
+            foreach ($user->getApartmentGroups() as $group) {
+                // To support true hierarchy we would fetch all children IDs as well.
+                // For simplicity, we just fetch IDs of directly assigned groups + their direct children here.
+                // A better approach would be a recursive function in the repository, but this is a start.
+                $groupIds[] = $group->getId();
+                foreach ($group->getChildren() as $childGroup) {
+                    $groupIds[] = $childGroup->getId();
+                    // Let's go one more level deep just in case
+                    foreach ($childGroup->getChildren() as $grandChildGroup) {
+                        $groupIds[] = $grandChildGroup->getId();
+                    }
+                }
+            }
+            $groupIds = array_unique($groupIds);
+            $apartments = $getAllApartmentsQuery->execute($groupIds);
+        }
 
         return $this->render('apartment/index.html.twig', [
             'apartments' => $apartments,
@@ -48,10 +72,43 @@ class ApartmentController extends AbstractController
         Request $request,
         DoctrineApartment $doctrineApartment,
     ): Response {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $user = $this->getUser();
+            $hasAccess = false;
+
+            $userGroupIds = [];
+            foreach ($user->getApartmentGroups() as $group) {
+                $userGroupIds[] = $group->getId();
+                foreach ($group->getChildren() as $childGroup) {
+                    $userGroupIds[] = $childGroup->getId();
+                    foreach ($childGroup->getChildren() as $grandChildGroup) {
+                        $userGroupIds[] = $grandChildGroup->getId();
+                    }
+                }
+            }
+
+            foreach ($doctrineApartment->getApartmentGroups() as $aptGroup) {
+                if (in_array($aptGroup->getId(), $userGroupIds)) {
+                    $hasAccess = true;
+                    break;
+                }
+            }
+
+            if (!$hasAccess && !$doctrineApartment->getApartmentGroups()->isEmpty()) {
+                throw $this->createAccessDeniedException('No tienes permiso para editar este apartamento.');
+            }
+        }
         $form = $this->createForm(ApartmentType::class, $doctrineApartment);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Because domain apartment does not persist relations via application layer here easily,
+            // we will flush the relations from Doctrine layer directly before calling command
+            // Ideally this should go through Domain, but keeping it simple for now based on current structure.
+            $em = $this->container->get('doctrine')->getManager();
+            $em->persist($doctrineApartment);
+            $em->flush();
+
             // Map Doctrine to Domain
             $domainApartment = new DomainApartment(
                 $doctrineApartment->getName(),
