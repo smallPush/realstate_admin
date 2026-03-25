@@ -3,6 +3,12 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
     providers:
+        users_in_memory:
+            memory:
+                users:
+                    admin:
+                        password: '%env(ADMIN_PASSWORD)%'
+                        roles: ['ROLE_ADMIN']
         app_user_provider:
             entity:
                 class: App\Infrastructure\Persistence\Doctrine\Entity\User
