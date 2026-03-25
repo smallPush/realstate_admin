@@ -9,19 +9,25 @@ class Apartment
     private string $address;
     private bool $isAvailable;
     private int $price;
+    private ?string $description;
+    private ?\DateTimeImmutable $vapiSyncedAt;
 
     public function __construct(
         string $name,
         string $address,
         int $price,
         bool $isAvailable = true,
-        ?int $id = null
+        ?int $id = null,
+        ?string $description = null,
+        ?\DateTimeImmutable $vapiSyncedAt = null
     ) {
         $this->name = $name;
         $this->address = $address;
         $this->price = $price;
         $this->isAvailable = $isAvailable;
         $this->id = $id;
+        $this->description = $description;
+        $this->vapiSyncedAt = $vapiSyncedAt;
     }
 
     public function getId(): ?int
@@ -54,7 +60,7 @@ class Apartment
         return $this->isAvailable;
     }
 
-    public function setAvailable(bool $isAvailable): void
+    public function setIsAvailable(bool $isAvailable): void
     {
         $this->isAvailable = $isAvailable;
     }
@@ -67,5 +73,25 @@ class Apartment
     public function setPrice(int $price): void
     {
         $this->price = $price;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function getVapiSyncedAt(): ?\DateTimeImmutable
+    {
+        return $this->vapiSyncedAt;
+    }
+
+    public function setVapiSyncedAt(?\DateTimeImmutable $vapiSyncedAt): void
+    {
+        $this->vapiSyncedAt = $vapiSyncedAt;
     }
 }

@@ -6,6 +6,7 @@ use App\Infrastructure\Persistence\Doctrine\Entity\Apartment;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,6 +16,14 @@ class ApartmentType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('apartmentGroups', \Symfony\Bridge\Doctrine\Form\Type\EntityType::class, [
+                'class' => \App\Infrastructure\Persistence\Doctrine\Entity\ApartmentGroup::class,
+                'choice_label' => 'name',
+                'multiple' => true,
+                'expanded' => true,
+                'label' => 'Grupos',
+                'required' => false,
+            ])
             ->add('name', TextType::class, [
                 'label' => 'Nombre',
                 'attr' => ['placeholder' => 'Nombre del apartamento'],
@@ -26,6 +35,11 @@ class ApartmentType extends AbstractType
             ->add('price', IntegerType::class, [
                 'label' => 'Precio (€/mes)',
                 'attr' => ['placeholder' => 'Precio mensual'],
+            ])
+            ->add('description', TextareaType::class, [
+                'label' => 'Descripción',
+                'attr' => ['placeholder' => 'Descripción detallada del apartamento', 'rows' => 5],
+                'required' => false,
             ])
             ->add('isAvailable', CheckboxType::class, [
                 'label' => 'Disponible',

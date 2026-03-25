@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Usuarios{% endblock %}
+
+{% block body %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 1.5rem; color: var(--text-primary); margin: 0;">Usuarios</h1>
+        <a href="{{ path('user_new') }}" class="btn btn-primary">
+            <span>+</span> Nuevo Usuario
+        </a>
+    </div>
+
+    <div class="table-card">
+        {% if users|length > 0 %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Grupos de Acceso</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td style="color: var(--text-muted);">#{{ user.id }}</td>
+                        <td style="font-weight: 500;">{{ user.username }}</td>
+                        <td>
+                            {% for group in user.apartmentGroups %}
+                                <span class="badge" style="background: var(--bg-hover); color: var(--text-primary);">{{ group.name }}</span>
+                            {% else %}
+                                -
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="{{ path('user_edit', {'id': user.id}) }}" class="btn-edit">
+                                    Editar
+                                </a>
+                                <form method="post" action="{{ path('user_delete', {'id': user.id}) }}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este usuario?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                                    <button class="btn-edit" style="color: var(--danger); border-color: rgba(255, 107, 107, 0.2); background: var(--danger-bg);">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">👤</div>
+                <p>No hay usuarios registrados.</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

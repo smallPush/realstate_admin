@@ -6,3 +6,7 @@
 vendor/
 var/
 .env
+
+### Server
+server.log
+server_output.log

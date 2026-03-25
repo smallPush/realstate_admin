@@ -34,6 +34,25 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
     }
 
     /**
+     * @param int[] $groupIds
+     * @return DomainApartment[]
+     */
+    public function findByGroupIds(array $groupIds): array
+    {
+        if (empty($groupIds)) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('a')
+            ->join('a.apartmentGroups', 'g')
+            ->where('g.id IN (:groupIds)')
+            ->setParameter('groupIds', $groupIds);
+
+        $doctrineApartments = $qb->getQuery()->getResult();
+        return array_map([$this, 'toDomain'], $doctrineApartments);
+    }
+
+    /**
      * @return DomainApartment[]
      */
     public function findAvailable(): array
@@ -58,7 +77,9 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
         $doctrineApartment->setName($domainApartment->getName());
         $doctrineApartment->setAddress($domainApartment->getAddress());
         $doctrineApartment->setPrice($domainApartment->getPrice());
-        $doctrineApartment->setAvailable($domainApartment->isAvailable());
+        $doctrineApartment->setIsAvailable($domainApartment->isAvailable());
+        $doctrineApartment->setDescription($domainApartment->getDescription());
+        $doctrineApartment->setVapiSyncedAt($domainApartment->getVapiSyncedAt());
 
         $em->persist($doctrineApartment);
         $em->flush();
@@ -83,32 +104,10 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
             $doctrineApartment->getAddress(),
             $doctrineApartment->getPrice(),
             $doctrineApartment->isAvailable(),
-            $doctrineApartment->getId()
+            $doctrineApartment->getId(),
+            $doctrineApartment->getDescription(),
+            $doctrineApartment->getVapiSyncedAt()
         );
     }
 
-//    /**
-//     * @return Apartment[] Returns an array of Apartment objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('a.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Apartment
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
 }

@@ -1,0 +1,15 @@
+<<<<<<< SEARCH
+    public function execute(): array
+    {
+        return $this->apartmentRepository->findAll();
+    }
+=======
+    public function execute(?array $groupIds = null): array
+    {
+        if ($groupIds !== null) {
+            return $this->apartmentRepository->findByGroupIds($groupIds);
+        }
+
+        return $this->apartmentRepository->findAll();
+    }
+>>>>>>> REPLACE

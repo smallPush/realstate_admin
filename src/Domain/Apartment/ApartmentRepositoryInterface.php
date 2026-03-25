@@ -12,6 +12,12 @@ interface ApartmentRepositoryInterface
     public function findAll(): array;
 
     /**
+     * @param int[] $groupIds
+     * @return Apartment[]
+     */
+    public function findByGroupIds(array $groupIds): array;
+
+    /**
      * @return Apartment[]
      */
     public function findAvailable(): array;

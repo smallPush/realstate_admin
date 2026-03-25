@@ -9,6 +9,10 @@ security:
                     admin:
                         password: '%env(ADMIN_PASSWORD)%'
                         roles: ['ROLE_ADMIN']
+        app_user_provider:
+            entity:
+                class: App\Infrastructure\Persistence\Doctrine\Entity\User
+                property: username
 
     firewalls:
         dev:
@@ -16,7 +20,7 @@ security:
             security: false
         main:
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -31,7 +35,9 @@ security:
         ROLE_PUBLIC: []
 
     access_control:
-        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/admin/users, roles: ROLE_ADMIN }
+        - { path: ^/admin/apartment-groups, roles: ROLE_ADMIN }
+        - { path: ^/admin, roles: ROLE_USER }
 
 when@test:
     security:

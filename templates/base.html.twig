@@ -264,6 +264,10 @@
         }
 
         .btn-edit {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
             padding: 0.4rem 0.85rem;
             font-size: 0.8rem;
             background: var(--accent-glow);
@@ -307,7 +311,8 @@
 
         .form-group input[type="text"],
         .form-group input[type="number"],
-        .form-group input[type="password"] {
+        .form-group input[type="password"],
+        .form-group textarea {
             width: 100%;
             padding: 0.75rem 1rem;
             background: var(--bg-card);
@@ -322,7 +327,8 @@
 
         .form-group input[type="text"]:focus,
         .form-group input[type="number"]:focus,
-        .form-group input[type="password"]:focus {
+        .form-group input[type="password"]:focus,
+        .form-group textarea:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
@@ -375,6 +381,21 @@
             letter-spacing: normal;
             font-weight: 500;
             margin-bottom: 0;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+            transition: var(--transition);
         }
 
         .form-actions {
@@ -441,12 +462,15 @@
     <nav class="navbar">
         <a href="{{ path('apartment_public_list') }}" class="navbar-brand">
             <span class="icon">🏠</span>
-            Real Estate Admin
+            Apartamentos
         </a>
         <div class="nav-links">
-            <a href="{{ path('apartment_public_list') }}">Apartamentos</a>
-            {% if is_granted('ROLE_ADMIN') %}
-                <a href="{{ path('apartment_admin_index') }}">Panel Admin</a>
+            {% if is_granted('ROLE_USER') %}
+                <a href="{{ path('apartment_admin_index') }}">Apartamentos</a>
+                {% if is_granted('ROLE_ADMIN') %}
+                    <a href="{{ path('apartment_group_index') }}">Grupos</a>
+                    <a href="{{ path('user_index') }}">Usuarios</a>
+                {% endif %}
                 <a href="{{ path('app_logout') }}" style="color: var(--danger);">Cerrar sesión</a>
             {% else %}
                 <a href="{{ path('app_login') }}">Iniciar sesión</a>

@@ -5,6 +5,8 @@ namespace App\Infrastructure\Vapi;
 use App\Domain\Apartment\ApartmentRepositoryInterface;
 use App\Domain\Apartment\VapiKnowledgeBaseServiceInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Mime\Part\DataPart;
+use Symfony\Component\Mime\Part\Multipart\FormDataPart;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
@@ -35,79 +37,106 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         }
 
         // 1. Generate the document content
-        $content = $this->generateDocument();
+        $availableApartments = $this->apartmentRepository->findAvailable();
+        $content = $this->generateDocument($availableApartments);
 
-        // 2. Delete the previous file if it exists
-        $this->deletePreviousFile();
+        // 2. Start deleting the previous file if it exists (async)
+        $deleteTask = $this->startDeletingPreviousFile();
 
-        // 3. Upload the new file
-        $this->uploadFile($content);
-    }
+        // 3. Start uploading the new file (async)
+        $uploadTask = $this->startUploadingFile($content);
 
-    private function generateDocument(): string
-    {
-        $apartments = $this->apartmentRepository->findAll();
-
-        $lines = ["=== Base de Conocimiento: Apartamentos ===", ""];
-        $lines[] = "Fecha de actualización: " . (new \DateTimeImmutable())->format('d/m/Y H:i');
-        $lines[] = "Total de apartamentos: " . count($apartments);
-        $lines[] = "";
-        $lines[] = "---";
-        $lines[] = "";
-
-        foreach ($apartments as $apartment) {
-            $available = $apartment->isAvailable() ? 'Sí' : 'No';
-            $lines[] = "Apartamento: " . $apartment->getName();
-            $lines[] = "  Dirección: " . $apartment->getAddress();
-            $lines[] = "  Precio: " . number_format($apartment->getPrice(), 0, ',', '.') . " €/mes";
-            $lines[] = "  Disponible: " . $available;
-            $lines[] = "";
+        // 4. Wait for both responses to complete
+        if ($deleteTask) {
+            $this->finishDeletingPreviousFile($deleteTask['response'], $deleteTask['fileId']);
+        }
+        $success = false;
+        if ($uploadTask) {
+            $success = $this->finishUploadingFile($uploadTask['response'], $uploadTask['tmpFilePath']);
         }
 
-        // Summary of available apartments
-        $availableApartments = array_filter(
-            $apartments,
-            fn($a) => $a->isAvailable()
-        );
+        if ($success) {
+            $now = new \DateTimeImmutable();
+            foreach ($availableApartments as $apt) {
+                $apt->setVapiSyncedAt($now);
+                $this->apartmentRepository->save($apt);
+            }
+        } else {
+            throw new \RuntimeException('Failed to upload the Knowledge Base file to Vapi. Check the logs for details.');
+        }
+    }
 
+    /**
+     * @param \App\Domain\Apartment\Apartment[] $availableApartments
+     */
+    private function generateDocument(array $availableApartments): string
+    {
+        $lines = ["=== Base de Conocimiento: Apartamentos ===", ""];
+        $lines[] = "Fecha de actualización: " . (new \DateTimeImmutable())->format('d/m/Y H:i');
+        $lines[] = "Total de apartamentos disponibles: " . count($availableApartments);
+        $lines[] = "";
         $lines[] = "---";
         $lines[] = "";
-        $lines[] = "Resumen: Hay " . count($availableApartments) . " apartamentos disponibles de un total de " . count($apartments) . ".";
-        $lines[] = "";
         $lines[] = "Apartamentos disponibles:";
+        $lines[] = "";
+
         foreach ($availableApartments as $apt) {
-            $lines[] = "  - " . $apt->getName() . " (" . $apt->getAddress() . ") por " . number_format($apt->getPrice(), 0, ',', '.') . " €/mes";
+            $lines[] = "Apartamento: " . $apt->getName();
+            $lines[] = "  Dirección: " . $apt->getAddress();
+            $lines[] = "  Precio: " . number_format($apt->getPrice(), 0, ',', '.') . " €/mes";
+            $lines[] = "  Disponible: Sí";
+            $lines[] = "";
         }
 
         return implode("\n", $lines);
     }
 
-    private function deletePreviousFile(): void
+    /**
+     * @return array{response: \Symfony\Contracts\HttpClient\ResponseInterface, fileId: string}|null
+     */
+    private function startDeletingPreviousFile(): ?array
     {
         if (!file_exists($this->fileIdPath)) {
-            return;
+            return null;
         }
 
         $previousFileId = trim(file_get_contents($this->fileIdPath));
         if (empty($previousFileId)) {
-            return;
+            return null;
         }
 
         try {
-            $this->httpClient->request('DELETE', 'https://api.vapi.ai/file/' . $previousFileId, [
+            $response = $this->httpClient->request('DELETE', 'https://api.vapi.ai/file/' . $previousFileId, [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
                 ],
             ]);
-            $this->logger->info('Vapi: deleted previous file {fileId}', ['fileId' => $previousFileId]);
+            return ['response' => $response, 'fileId' => $previousFileId];
+        } catch (\Throwable $e) {
+            $this->logger->warning('Vapi: could not start deleting previous file: {error}', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    private function finishDeletingPreviousFile(\Symfony\Contracts\HttpClient\ResponseInterface $response, string $fileId): void
+    {
+        try {
+            // Accessing the status code will wait for the response to resolve
+            $response->getStatusCode();
+            $this->logger->info('Vapi: deleted previous file {fileId}', ['fileId' => $fileId]);
         } catch (\Throwable $e) {
             $this->logger->warning('Vapi: could not delete previous file: {error}', ['error' => $e->getMessage()]);
         }
 
-        @unlink($this->fileIdPath);
+        if (file_exists($this->fileIdPath)) {
+            unlink($this->fileIdPath);
+        }
     }
 
-    private function uploadFile(string $content): void
+    /**
+     * @return array{response: \Symfony\Contracts\HttpClient\ResponseInterface, tmpFilePath: string}|null
+     */
+    private function startUploadingFile(string $content): ?array
     {
         // Write content to a temp file for multipart upload
         $tmpFile = tempnam(sys_get_temp_dir(), 'vapi_kb_');
@@ -115,16 +144,33 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         rename($tmpFile, $tmpFilePath);
         file_put_contents($tmpFilePath, $content);
 
+        $formData = new FormDataPart([
+            'file' => DataPart::fromPath($tmpFilePath, 'vapi_kb.txt', 'text/plain')
+        ]);
+
         try {
+            $headers = $formData->getPreparedHeaders()->toArray();
+            $headers[] = 'Authorization: Bearer ' . $this->apiKey;
+
             $response = $this->httpClient->request('POST', 'https://api.vapi.ai/file', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                ],
-                'body' => [
-                    'file' => fopen($tmpFilePath, 'r'),
-                ],
+                'headers' => $headers,
+                'body' => $formData->bodyToIterable(),
             ]);
 
+            return ['response' => $response, 'tmpFilePath' => $tmpFilePath];
+        } catch (\Throwable $e) {
+            $this->logger->error('Vapi: failed to start uploading KB file: {error}', ['error' => $e->getMessage()]);
+            if (file_exists($tmpFilePath)) {
+                unlink($tmpFilePath);
+            }
+            return null;
+        }
+    }
+
+    private function finishUploadingFile(\Symfony\Contracts\HttpClient\ResponseInterface $response, string $tmpFilePath): bool
+    {
+        $success = false;
+        try {
             $data = $response->toArray();
 
             if (isset($data['id'])) {
@@ -136,13 +182,18 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
 
                 file_put_contents($this->fileIdPath, $data['id']);
                 $this->logger->info('Vapi: uploaded KB file with id {fileId}', ['fileId' => $data['id']]);
+                $success = true;
             } else {
                 $this->logger->error('Vapi: upload response did not contain file id', ['response' => $data]);
             }
         } catch (\Throwable $e) {
             $this->logger->error('Vapi: failed to upload KB file: {error}', ['error' => $e->getMessage()]);
         } finally {
-            @unlink($tmpFilePath);
+            if (file_exists($tmpFilePath)) {
+                unlink($tmpFilePath);
+            }
         }
+
+        return $success;
     }
 }

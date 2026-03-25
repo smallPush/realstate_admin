@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class VapiController extends AbstractController
 {
@@ -15,15 +16,12 @@ class VapiController extends AbstractController
     {
         $apartments = $getAvailableApartmentsQuery->execute();
 
-        $data = [];
-        foreach ($apartments as $apartment) {
-            $data[] = [
-                'id' => $apartment->getId(),
-                'name' => $apartment->getName(),
-                'address' => $apartment->getAddress(),
-                'price' => $apartment->getPrice(),
-            ];
-        }
+        $data = array_map(static fn($apartment) => [
+            'id' => $apartment->getId(),
+            'name' => $apartment->getName(),
+            'address' => $apartment->getAddress(),
+            'price' => $apartment->getPrice(),
+        ], $apartments);
 
         // Devolver la información en formato JSON para que Vapi (o la IA) la consuma
         return new JsonResponse([
@@ -34,8 +32,20 @@ class VapiController extends AbstractController
     }
     
     #[Route('/api/vapi/webhook', name: 'api_vapi_webhook', methods: ['POST'])]
-    public function vapiWebhook(Request $request, GetAvailableApartmentsQuery $getAvailableApartmentsQuery): JsonResponse
-    {
+    public function vapiWebhook(
+        Request $request,
+        GetAvailableApartmentsQuery $getAvailableApartmentsQuery,
+        #[Autowire(env: 'VAPI_WEBHOOK_SECRET')] string $webhookSecret = ''
+    ): JsonResponse {
+        if ($webhookSecret === '') {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $providedSecret = $request->headers->get('x-vapi-secret', '');
+        if (!hash_equals($webhookSecret, $providedSecret)) {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
         $content = json_decode($request->getContent(), true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -53,14 +63,11 @@ class VapiController extends AbstractController
             if (isset($functionCall['name']) && $functionCall['name'] === 'getAvailableApartments') {
                 $apartments = $getAvailableApartmentsQuery->execute();
                 
-                $data = [];
-                foreach ($apartments as $apartment) {
-                    $data[] = [
-                        'name' => $apartment->getName(),
-                        'address' => $apartment->getAddress(),
-                        'price' => $apartment->getPrice(),
-                    ];
-                }
+                $data = array_map(static fn($apartment) => [
+                    'name' => $apartment->getName(),
+                    'address' => $apartment->getAddress(),
+                    'price' => $apartment->getPrice(),
+                ], $apartments);
                 
                 return new JsonResponse([
                     'results' => [
