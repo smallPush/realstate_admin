@@ -24,9 +24,9 @@ class VapiAssistantService implements VapiAssistantServiceInterface
 
     public function syncAssistant(VapiAssistantConfig $config): string
     {
-        if (empty($this->apiKey)) {
-            $this->logger->warning('VAPI_API_KEY is not set — skipping Assistant sync.');
-            throw new \RuntimeException('VAPI_API_KEY is not set.');
+        if (empty($this->apiKey) || str_contains($this->apiKey, 'your_vapi_api_key_here')) {
+            $this->logger->warning('VAPI_API_KEY is not configured or is a placeholder — skipping Assistant sync.');
+            throw new \RuntimeException('VAPI_API_KEY is not configured.');
         }
 
         $payload = [

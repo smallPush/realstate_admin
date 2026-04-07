@@ -31,8 +31,8 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
      */
     public function syncKnowledgeBase(): void
     {
-        if (empty($this->apiKey)) {
-            $this->logger->warning('VAPI_API_KEY is not set — skipping Knowledge Base sync.');
+        if (empty($this->apiKey) || str_contains($this->apiKey, 'your_vapi_api_key_here')) {
+            $this->logger->warning('VAPI_API_KEY is not configured or is a placeholder — skipping Knowledge Base sync.');
             return;
         }
 

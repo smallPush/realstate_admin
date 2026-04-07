@@ -124,7 +124,11 @@ class ApartmentController extends AbstractController
             $this->updateApartmentCommand->execute($domainApartment);
 
             // Sync updated apartments to Vapi Knowledge Base
-            $this->syncKnowledgeBaseCommand->execute();
+            try {
+                $this->syncKnowledgeBaseCommand->execute();
+            } catch (\Throwable $e) {
+                $this->addFlash('warning', 'El apartamento se guardó, pero la sincronización con Vapi falló: ' . $e->getMessage());
+            }
 
             $this->addFlash('success', 'Apartamento actualizado correctamente.');
 
