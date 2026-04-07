@@ -12,12 +12,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
+
 
 class ApartmentController extends AbstractController
 {
     public function __construct(
         private readonly UpdateApartmentCommand $updateApartmentCommand,
         private readonly SyncKnowledgeBaseCommand $syncKnowledgeBaseCommand,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -105,9 +108,9 @@ class ApartmentController extends AbstractController
             // Because domain apartment does not persist relations via application layer here easily,
             // we will flush the relations from Doctrine layer directly before calling command
             // Ideally this should go through Domain, but keeping it simple for now based on current structure.
-            $em = $this->container->get('doctrine')->getManager();
-            $em->persist($doctrineApartment);
-            $em->flush();
+            $this->entityManager->persist($doctrineApartment);
+            $this->entityManager->flush();
+
 
             // Map Doctrine to Domain
             $domainApartment = new DomainApartment(
