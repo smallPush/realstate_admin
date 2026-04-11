@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Domain\ApartmentGroup\ApartmentGroupRepositoryInterface;
-use App\Domain\ApartmentGroup\ApartmentGroup as DomainApartmentGroup;
 use App\Form\ApartmentGroupType;
 use App\Infrastructure\Persistence\Doctrine\Entity\ApartmentGroup;
 use Doctrine\ORM\EntityManagerInterface;
