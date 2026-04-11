@@ -1,0 +1,19 @@
+# Docker ignore
+.git/
+.docker/
+! .docker/frankenphp/
+compose.yaml
+compose.override.yaml
+docker-compose.yml
+docker-compose.override.yml
+.env.local
+.env.test
+.phpunit.cache/
+tests/
+var/
+vendor/
+public/build/
+phpunit.dist.xml
+README.md
+Dockerfile
+compose.prod.yaml
