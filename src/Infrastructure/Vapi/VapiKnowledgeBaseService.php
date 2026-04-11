@@ -142,6 +142,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         $tmpFile = tempnam(sys_get_temp_dir(), 'vapi_kb_');
         $tmpFilePath = $tmpFile . '.txt';
         rename($tmpFile, $tmpFilePath);
+        chmod($tmpFilePath, 0600);
         file_put_contents($tmpFilePath, $content);
 
         $formData = new FormDataPart([
