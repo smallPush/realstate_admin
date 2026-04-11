@@ -29,8 +29,20 @@ class CreateAdminCommand extends Command
     {
         $this
             ->addArgument('username', InputArgument::REQUIRED, 'The username of the admin user')
-            ->addArgument('password', InputArgument::REQUIRED, 'The password of the admin user')
+            ->addArgument('password', InputArgument::OPTIONAL, 'The password of the admin user')
         ;
+    }
+
+    protected function interact(InputInterface $input, OutputInterface $output): void
+    {
+        $io = new SymfonyStyle($input, $output);
+
+        if (!$input->getArgument('password')) {
+            $password = $io->askHidden('Please enter the password for the admin user');
+            if ($password) {
+                $input->setArgument('password', $password);
+            }
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -38,6 +50,11 @@ class CreateAdminCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $username = $input->getArgument('username');
         $password = $input->getArgument('password');
+
+        if (empty($password)) {
+            $io->error('The password cannot be empty. Please provide it as an argument or in interactive mode.');
+            return Command::FAILURE;
+        }
 
         $userRepository = $this->entityManager->getRepository(User::class);
         $user = $userRepository->findOneBy(['username' => $username]);
