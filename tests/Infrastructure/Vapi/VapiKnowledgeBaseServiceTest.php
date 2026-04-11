@@ -18,7 +18,7 @@ class VapiKnowledgeBaseServiceTest extends TestCase
 
         $loggerMock->expects($this->once())
             ->method('warning')
-            ->with('VAPI_API_KEY is not set — skipping Knowledge Base sync.');
+            ->with('VAPI_API_KEY is not configured or is a placeholder — skipping Knowledge Base sync.');
 
         $service = new VapiKnowledgeBaseService(
             $httpClientMock,
