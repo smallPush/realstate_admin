@@ -1,0 +1,5 @@
+[values]
+    phpDocumentRoot = "public"
+
+[phases.setup]
+    nixPkgs = ["...", "php83Extensions.pdo_pgsql", "php83Extensions.intl"]
