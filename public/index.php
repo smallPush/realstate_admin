@@ -2,20 +2,28 @@
 
 use App\Kernel;
 
-// Robustly find the vendor/autoload_runtime.php
-$autoloadPath = realpath(__DIR__ . '/../vendor/autoload_runtime.php');
+$possiblePaths = [
+    __DIR__ . '/../vendor/autoload_runtime.php',
+    __DIR__ . '/vendor/autoload_runtime.php',
+    getcwd() . '/vendor/autoload_runtime.php',
+    '/app/vendor/autoload_runtime.php',
+];
 
-if (!$autoloadPath && file_exists(__DIR__ . '/vendor/autoload_runtime.php')) {
-    $autoloadPath = realpath(__DIR__ . '/vendor/autoload_runtime.php');
+$autoloadPath = null;
+foreach ($possiblePaths as $path) {
+    if (file_exists($path)) {
+        $autoloadPath = realpath($path);
+        break;
+    }
 }
 
 if (!$autoloadPath) {
-    // Last resort: check from root if included from elsewhere
-    $autoloadPath = realpath(getcwd() . '/vendor/autoload_runtime.php');
-}
-
-if (!$autoloadPath) {
-    throw new \RuntimeException('Unable to find vendor/autoload_runtime.php. Did you run "composer install"?');
+    throw new \RuntimeException(sprintf(
+        'Unable to find vendor/autoload_runtime.php. Tried: %s. Current DIR: %s. GetCWD: %s',
+        implode(', ', $possiblePaths),
+        __DIR__,
+        getcwd()
+    ));
 }
 
 require_once $autoloadPath;
