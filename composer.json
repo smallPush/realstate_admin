@@ -26,6 +26,8 @@
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.6",
         "phpunit/phpunit": "*",
+        "symfony/browser-kit": "7.4.*",
+        "symfony/css-selector": "7.4.*",
         "symfony/maker-bundle": "^1.66",
         "symfony/phpunit-bridge": "*",
         "symfony/property-access": "7.4.*",
