@@ -3,9 +3,18 @@
 {% block title %}Admin — Apartamentos{% endblock %}
 
 {% block body %}
-    <div class="page-header">
-        <h1>Panel de administración</h1>
-        <p>Gestiona todos los apartamentos del sistema</p>
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1>Panel de administración</h1>
+            <p>Gestiona todos los apartamentos del sistema</p>
+        </div>
+        <div>
+            <form action="{{ path('apartment_admin_sync') }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn-edit" style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer;">
+                    🔄 Sincronizar con Vapi
+                </button>
+            </form>
+        </div>
     </div>
 
     {% if apartments is empty %}

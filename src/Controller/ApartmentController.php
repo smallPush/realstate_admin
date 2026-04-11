@@ -140,4 +140,17 @@ class ApartmentController extends AbstractController
             'form' => $form,
         ]);
     }
+
+    #[Route('/admin/apartments/sync', name: 'apartment_admin_sync', methods: ['POST'])]
+    public function syncVapi(): Response
+    {
+        try {
+            $this->syncKnowledgeBaseCommand->execute();
+            $this->addFlash('success', 'Sincronización con Vapi completada correctamente.');
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'Error al sincronizar con Vapi: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('apartment_admin_index');
+    }
 }
