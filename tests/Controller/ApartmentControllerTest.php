@@ -27,7 +27,8 @@ class ApartmentControllerTest extends TestCase
 
         $this->controller = new ApartmentController(
             $this->updateCommandMock,
-            $this->syncCommandMock
+            $this->syncCommandMock,
+            $this->createMock(\Doctrine\ORM\EntityManagerInterface::class)
         );
 
         $this->twigMock = $this->createMock(Environment::class);
