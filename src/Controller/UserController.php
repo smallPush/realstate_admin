@@ -43,9 +43,6 @@ class UserController extends AbstractController
             $plainPassword = $form->get('plainPassword')->getData();
             if ($plainPassword) {
                 $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
-            } else {
-                // random password if not set to avoid error on save
-                $user->setPassword($this->passwordHasher->hashPassword($user, bin2hex(random_bytes(10))));
             }
 
             $this->entityManager->persist($user);

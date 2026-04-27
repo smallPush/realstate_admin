@@ -122,7 +122,7 @@ class UserControllerTest extends WebTestCase
 
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => 'new_user_no_pass']);
         $this->assertNotNull($user);
-        $this->assertNotEmpty($user->getPassword()); // Should have a random generated password
+        $this->assertNull($user->getPassword()); // Should have no password
     }
 
     public function testAdminCanEditUser(): void
