@@ -59,8 +59,8 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
             $now = new \DateTimeImmutable();
             foreach ($availableApartments as $apt) {
                 $apt->setVapiSyncedAt($now);
-                $this->apartmentRepository->save($apt);
             }
+            $this->apartmentRepository->saveAll($availableApartments);
         } else {
             throw new \RuntimeException('Failed to upload the Knowledge Base file to Vapi. Check the logs for details.');
         }

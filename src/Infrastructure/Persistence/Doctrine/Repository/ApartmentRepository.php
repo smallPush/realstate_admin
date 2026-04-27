@@ -63,6 +63,20 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
 
     public function save(DomainApartment $domainApartment): void
     {
+        $this->persistDomain($domainApartment);
+        $this->getEntityManager()->flush();
+    }
+
+    public function saveAll(array $apartments): void
+    {
+        foreach ($apartments as $apartment) {
+            $this->persistDomain($apartment);
+        }
+        $this->getEntityManager()->flush();
+    }
+
+    private function persistDomain(DomainApartment $domainApartment): void
+    {
         $em = $this->getEntityManager();
 
         $doctrineApartment = null;
@@ -82,7 +96,6 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
         $doctrineApartment->setVapiSyncedAt($domainApartment->getVapiSyncedAt());
 
         $em->persist($doctrineApartment);
-        $em->flush();
     }
 
     public function delete(DomainApartment $domainApartment): void
