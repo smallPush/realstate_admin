@@ -29,7 +29,29 @@ class VapiAssistantService implements VapiAssistantServiceInterface
             throw new \RuntimeException('VAPI_API_KEY is not configured.');
         }
 
-        $payload = [
+        $options = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $this->preparePayload($config),
+        ];
+
+        try {
+            if (!empty($this->assistantId)) {
+                return $this->updateAssistant($options);
+            } else {
+                return $this->createAssistant($options);
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error('Vapi: failed to sync assistant: {error}', ['error' => $e->getMessage()]);
+            throw new \RuntimeException('Failed to sync Vapi Assistant: ' . $e->getMessage());
+        }
+    }
+
+    private function preparePayload(VapiAssistantConfig $config): array
+    {
+        return [
             'model' => [
                 'provider' => 'openai',
                 'model' => 'gpt-4o',
@@ -43,40 +65,28 @@ class VapiAssistantService implements VapiAssistantServiceInterface
             'firstMessage' => $config->getFirstMessage(),
             'maxDurationSeconds' => $config->getTimeLimit(),
         ];
+    }
 
-        // Ensure we only pass necessary headers
-        $options = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $payload,
-        ];
+    private function updateAssistant(array $options): string
+    {
+        $response = $this->httpClient->request('PATCH', 'https://api.vapi.ai/assistant/' . $this->assistantId, $options);
+        $this->logger->info('Vapi: updated assistant {id}', ['id' => $this->assistantId]);
+        $data = $response->toArray();
+        return $data['id'] ?? $this->assistantId;
+    }
 
-        try {
-            if (!empty($this->assistantId)) {
-                // Update existing assistant
-                $response = $this->httpClient->request('PATCH', 'https://api.vapi.ai/assistant/' . $this->assistantId, $options);
-                $this->logger->info('Vapi: updated assistant {id}', ['id' => $this->assistantId]);
-                $data = $response->toArray();
-                return $data['id'] ?? $this->assistantId;
-            } else {
-                // Create new assistant
-                $response = $this->httpClient->request('POST', 'https://api.vapi.ai/assistant', $options);
-                $data = $response->toArray();
+    private function createAssistant(array $options): string
+    {
+        $response = $this->httpClient->request('POST', 'https://api.vapi.ai/assistant', $options);
+        $data = $response->toArray();
 
-                if (!isset($data['id'])) {
-                    $this->logger->error('Vapi: create assistant response did not contain id', ['response' => $data]);
-                    throw new \RuntimeException('Failed to create Vapi Assistant. ID not found in response.');
-                }
-
-                $this->assistantId = $data['id'];
-                $this->logger->info('Vapi: created new assistant with id {id}', ['id' => $this->assistantId]);
-                return $this->assistantId;
-            }
-        } catch (\Throwable $e) {
-            $this->logger->error('Vapi: failed to sync assistant: {error}', ['error' => $e->getMessage()]);
-            throw new \RuntimeException('Failed to sync Vapi Assistant: ' . $e->getMessage());
+        if (!isset($data['id'])) {
+            $this->logger->error('Vapi: create assistant response did not contain id', ['response' => $data]);
+            throw new \RuntimeException('Failed to create Vapi Assistant. ID not found in response.');
         }
+
+        $this->assistantId = $data['id'];
+        $this->logger->info('Vapi: created new assistant with id {id}', ['id' => $this->assistantId]);
+        return $this->assistantId;
     }
 }
