@@ -24,5 +24,10 @@ interface ApartmentRepositoryInterface
 
     public function save(Apartment $apartment): void;
 
+    /**
+     * @param Apartment[] $apartments
+     */
+    public function saveAll(array $apartments): void;
+
     public function delete(Apartment $apartment): void;
 }
