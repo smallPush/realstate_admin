@@ -73,4 +73,53 @@ class ApartmentControllerTest extends TestCase
         $this->assertEquals('<html>Rendered public list content</html>', $response->getContent());
         $this->assertEquals(200, $response->getStatusCode());
     }
+
+    public function testSyncVapiErrorAddsFlashAndRedirects(): void
+    {
+        $this->syncCommandMock->expects($this->once())
+            ->method('execute')
+            ->willThrowException(new \Exception('Vapi API error'));
+
+        $routerMock = $this->createMock(\Symfony\Component\Routing\RouterInterface::class);
+        $routerMock->expects($this->once())
+            ->method('generate')
+            ->with('apartment_admin_index')
+            ->willReturn('/admin/apartments');
+
+        $flashBagMock = $this->createMock(\Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface::class);
+        $flashBagMock->expects($this->once())
+            ->method('add')
+            ->with('error', 'Error al sincronizar con Vapi: Vapi API error');
+
+        $sessionMock = $this->createMock(\Symfony\Component\HttpFoundation\Session\Session::class);
+        $sessionMock->expects($this->once())
+            ->method('getFlashBag')
+            ->willReturn($flashBagMock);
+
+        $requestStackMock = $this->createMock(\Symfony\Component\HttpFoundation\RequestStack::class);
+        $requestStackMock->expects($this->once())
+            ->method('getSession')
+            ->willReturn($sessionMock);
+
+        $this->containerMock->expects($this->any())
+            ->method('has')
+            ->willReturnMap([
+                ['router', true],
+                ['request_stack', true],
+                ['twig', true],
+            ]);
+
+        $this->containerMock->expects($this->any())
+            ->method('get')
+            ->willReturnMap([
+                ['router', $routerMock],
+                ['request_stack', $requestStackMock],
+                ['twig', $this->twigMock],
+            ]);
+
+        $response = $this->controller->syncVapi();
+
+        $this->assertEquals(302, $response->getStatusCode());
+        $this->assertEquals('/admin/apartments', $response->getTargetUrl());
+    }
 }
