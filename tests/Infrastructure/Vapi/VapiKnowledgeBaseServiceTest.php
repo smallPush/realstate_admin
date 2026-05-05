@@ -25,7 +25,8 @@ class VapiKnowledgeBaseServiceTest extends TestCase
             $apartmentRepositoryMock,
             $loggerMock,
             '',
-            '/tmp'
+            '/tmp',
+            'https://api.vapi.ai'
         );
 
         $service->syncKnowledgeBase();

@@ -11,15 +11,18 @@ class VapiAssistantService implements VapiAssistantServiceInterface
 {
     private string $apiKey;
     private ?string $assistantId;
+    private string $apiUrl;
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         string $vapiApiKey,
+        string $vapiApiUrl,
         ?string $vapiAssistantId = null
     ) {
         $this->apiKey = $vapiApiKey;
         $this->assistantId = $vapiAssistantId;
+        $this->apiUrl = rtrim($vapiApiUrl, '/');
     }
 
     public function syncAssistant(VapiAssistantConfig $config): string
@@ -69,7 +72,7 @@ class VapiAssistantService implements VapiAssistantServiceInterface
 
     private function updateAssistant(array $options): string
     {
-        $response = $this->httpClient->request('PATCH', 'https://api.vapi.ai/assistant/' . $this->assistantId, $options);
+        $response = $this->httpClient->request('PATCH', $this->apiUrl . '/assistant/' . $this->assistantId, $options);
         $this->logger->info('Vapi: updated assistant {id}', ['id' => $this->assistantId]);
         $data = $response->toArray();
         return $data['id'] ?? $this->assistantId;
@@ -77,7 +80,7 @@ class VapiAssistantService implements VapiAssistantServiceInterface
 
     private function createAssistant(array $options): string
     {
-        $response = $this->httpClient->request('POST', 'https://api.vapi.ai/assistant', $options);
+        $response = $this->httpClient->request('POST', $this->apiUrl . '/assistant', $options);
         $data = $response->toArray();
 
         if (!isset($data['id'])) {
