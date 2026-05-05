@@ -69,18 +69,28 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
 
     public function saveAll(array $apartments): void
     {
+        $ids = array_filter(array_map(fn(DomainApartment $a) => $a->getId(), $apartments));
+
+        $existingEntities = [];
+        if (!empty($ids)) {
+            $entities = $this->findBy(['id' => $ids]);
+            foreach ($entities as $entity) {
+                $existingEntities[$entity->getId()] = $entity;
+            }
+        }
+
         foreach ($apartments as $apartment) {
-            $this->persistDomain($apartment);
+            $doctrineApartment = $apartment->getId() !== null ? ($existingEntities[$apartment->getId()] ?? null) : null;
+            $this->persistDomain($apartment, $doctrineApartment);
         }
         $this->getEntityManager()->flush();
     }
 
-    private function persistDomain(DomainApartment $domainApartment): void
+    private function persistDomain(DomainApartment $domainApartment, ?DoctrineApartment $doctrineApartment = null): void
     {
         $em = $this->getEntityManager();
 
-        $doctrineApartment = null;
-        if ($domainApartment->getId() !== null) {
+        if ($doctrineApartment === null && $domainApartment->getId() !== null) {
             $doctrineApartment = $this->find($domainApartment->getId());
         }
 
