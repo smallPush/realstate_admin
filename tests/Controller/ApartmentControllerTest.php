@@ -101,12 +101,22 @@ class ApartmentControllerTest extends TestCase
             ->method('getSession')
             ->willReturn($sessionMock);
 
+        $tokenManagerMock = $this->createMock(\Symfony\Component\Security\Csrf\CsrfTokenManagerInterface::class);
+        $tokenManagerMock->expects($this->once())
+            ->method('isTokenValid')
+            ->willReturn(true);
+
+        // Replace global setUp expectation for has() to avoid Conflicts
+        $this->containerMock = $this->createMock(ContainerInterface::class);
+        $this->controller->setContainer($this->containerMock);
+
         $this->containerMock->expects($this->any())
             ->method('has')
             ->willReturnMap([
                 ['router', true],
                 ['request_stack', true],
                 ['twig', true],
+                ['security.csrf.token_manager', true],
             ]);
 
         $this->containerMock->expects($this->any())
@@ -115,11 +125,45 @@ class ApartmentControllerTest extends TestCase
                 ['router', $routerMock],
                 ['request_stack', $requestStackMock],
                 ['twig', $this->twigMock],
+                ['security.csrf.token_manager', $tokenManagerMock],
             ]);
 
-        $response = $this->controller->syncVapi();
+        $request = new \Symfony\Component\HttpFoundation\Request([], ['_token' => 'valid-token']);
+
+        $response = $this->controller->syncVapi($request);
 
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertEquals('/admin/apartments', $response->getTargetUrl());
+    }
+
+    public function testSyncVapiThrowsAccessDeniedExceptionOnInvalidCsrfToken(): void
+    {
+        $tokenManagerMock = $this->createMock(\Symfony\Component\Security\Csrf\CsrfTokenManagerInterface::class);
+        $tokenManagerMock->expects($this->once())
+            ->method('isTokenValid')
+            ->willReturn(false);
+
+        // Replace global setUp expectation for has() to avoid Conflicts
+        $this->containerMock = $this->createMock(ContainerInterface::class);
+        $this->controller->setContainer($this->containerMock);
+
+        $this->containerMock->expects($this->any())
+            ->method('has')
+            ->willReturnMap([
+                ['security.csrf.token_manager', true],
+            ]);
+
+        $this->containerMock->expects($this->any())
+            ->method('get')
+            ->willReturnMap([
+                ['security.csrf.token_manager', $tokenManagerMock],
+            ]);
+
+        $request = new \Symfony\Component\HttpFoundation\Request([], ['_token' => 'invalid-token']);
+
+        $this->expectException(\Symfony\Component\Security\Core\Exception\AccessDeniedException::class);
+        $this->expectExceptionMessage('Invalid CSRF token.');
+
+        $this->controller->syncVapi($request);
     }
 }

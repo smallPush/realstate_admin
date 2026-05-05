@@ -10,6 +10,7 @@
         </div>
         <div>
             <form action="{{ path('apartment_admin_sync') }}" method="POST" style="display: inline;">
+                <input type="hidden" name="_token" value="{{ csrf_token('sync-vapi') }}">
                 <button type="submit" class="btn-edit" style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer;">
                     🔄 Sincronizar con Vapi
                 </button>
