@@ -150,4 +150,19 @@ class ApartmentGroup
 
         return $this;
     }
+
+    /**
+     * Returns an array containing the ID of the group and all its descendants.
+     *
+     * @return int[]
+     */
+    public function getAllRecursiveIds(): array
+    {
+        $ids = [$this->id];
+        foreach ($this->children as $child) {
+            $ids = array_merge($ids, $child->getAllRecursiveIds());
+        }
+
+        return $ids;
+    }
 }
