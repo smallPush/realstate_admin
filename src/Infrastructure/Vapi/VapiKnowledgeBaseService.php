@@ -139,7 +139,17 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
     private function startUploadingFile(string $content): ?array
     {
         // Write content to a temp file for multipart upload
-        $tmpFilePath = tempnam(sys_get_temp_dir(), 'vapi_kb_');
+        $dir = dirname($this->fileIdPath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0700, true);
+        }
+
+        $tmpFilePath = tempnam($dir, 'vapi_kb_');
+        if ($tmpFilePath === false) {
+            $this->logger->error('Vapi: failed to create temporary file for KB upload');
+            return null;
+        }
+
         chmod($tmpFilePath, 0600);
         file_put_contents($tmpFilePath, $content);
 
@@ -176,7 +186,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
                 // Ensure the share directory exists
                 $dir = dirname($this->fileIdPath);
                 if (!is_dir($dir)) {
-                    mkdir($dir, 0755, true);
+                    mkdir($dir, 0700, true);
                 }
 
                 file_put_contents($this->fileIdPath, $data['id']);
