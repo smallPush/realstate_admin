@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     environment:
       # These should be overridden by Dokploy's environment variables
-      DATABASE_URL: ${DATABASE_URL:-postgresql://app:!ChangeMe!@database:5432/app?serverVersion=16&charset=utf8}
+      DATABASE_URL: ${DATABASE_URL:?Please set DATABASE_URL}
       APP_SECRET: ${APP_SECRET:-$ecretf0rt3st}
       VAPI_API_KEY: ${VAPI_API_KEY:-}
       CADDY_GLOBAL_OPTIONS: "local_certs"
@@ -19,7 +19,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please set POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER:-app}
     healthcheck:
       test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
