@@ -142,8 +142,12 @@ class ApartmentController extends AbstractController
     }
 
     #[Route('/admin/apartments/sync', name: 'apartment_admin_sync', methods: ['POST'])]
-    public function syncVapi(): Response
+    public function syncVapi(Request $request): Response
     {
+        if (!$this->isCsrfTokenValid('sync-vapi', $request->getPayload()->getString('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
         try {
             $this->syncKnowledgeBaseCommand->execute();
             $this->addFlash('success', 'Sincronización con Vapi completada correctamente.');
