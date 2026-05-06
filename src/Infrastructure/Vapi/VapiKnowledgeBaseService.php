@@ -13,6 +13,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
 {
     private string $apiKey;
     private string $fileIdPath;
+    private string $apiUrl;
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
@@ -20,9 +21,11 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         private readonly LoggerInterface $logger,
         string $vapiApiKey,
         string $shareDir,
+        string $vapiApiUrl,
     ) {
         $this->apiKey = $vapiApiKey;
         $this->fileIdPath = $shareDir . '/vapi_file_id.txt';
+        $this->apiUrl = rtrim($vapiApiUrl, '/');
     }
 
     /**
@@ -106,7 +109,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         }
 
         try {
-            $response = $this->httpClient->request('DELETE', 'https://api.vapi.ai/file/' . $previousFileId, [
+            $response = $this->httpClient->request('DELETE', $this->apiUrl . '/file/' . $previousFileId, [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
                 ],
@@ -151,7 +154,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
             $headers = $formData->getPreparedHeaders()->toArray();
             $headers[] = 'Authorization: Bearer ' . $this->apiKey;
 
-            $response = $this->httpClient->request('POST', 'https://api.vapi.ai/file', [
+            $response = $this->httpClient->request('POST', $this->apiUrl . '/file', [
                 'headers' => $headers,
                 'body' => $formData->bodyToIterable(),
             ]);

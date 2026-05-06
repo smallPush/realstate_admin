@@ -7,6 +7,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    vapi_api_url: 'https://api.vapi.ai'
 
 services:
     # default configuration for services in *this* file
@@ -26,11 +27,13 @@ services:
         arguments:
             $vapiApiKey: '%env(VAPI_API_KEY)%'
             $shareDir: '%kernel.project_dir%/%env(APP_SHARE_DIR)%'
+            $vapiApiUrl: '%env(default:vapi_api_url:VAPI_API_URL)%'
 
     App\Infrastructure\Vapi\VapiAssistantService:
         arguments:
             $vapiApiKey: '%env(VAPI_API_KEY)%'
             $vapiAssistantId: '%env(VAPI_ASSISTANT_ID)%'
+            $vapiApiUrl: '%env(default:vapi_api_url:VAPI_API_URL)%'
 
     App\Domain\Apartment\ApartmentRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\ApartmentRepository'
     App\Domain\Apartment\VapiKnowledgeBaseServiceInterface: '@App\Infrastructure\Vapi\VapiKnowledgeBaseService'
