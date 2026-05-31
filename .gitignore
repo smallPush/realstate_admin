@@ -5,7 +5,7 @@
 ###< phpunit/phpunit ###
 vendor/
 var/
-.env
+.env.local
 
 ### Server
 server.log
