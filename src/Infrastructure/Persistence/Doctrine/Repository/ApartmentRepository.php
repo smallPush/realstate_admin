@@ -30,7 +30,7 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
     public function findAll(): array
     {
         $doctrineApartments = parent::findAll();
-        return array_map([$this, 'toDomain'], $doctrineApartments);
+        return array_map(fn(DoctrineApartment $a) => $this->toDomain($a), $doctrineApartments);
     }
 
     /**
@@ -49,7 +49,7 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
             ->setParameter('groupIds', $groupIds);
 
         $doctrineApartments = $qb->getQuery()->getResult();
-        return array_map([$this, 'toDomain'], $doctrineApartments);
+        return array_map(fn(DoctrineApartment $a) => $this->toDomain($a), $doctrineApartments);
     }
 
     /**
@@ -58,7 +58,7 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
     public function findAvailable(): array
     {
         $doctrineApartments = $this->findBy(['isAvailable' => true]);
-        return array_map([$this, 'toDomain'], $doctrineApartments);
+        return array_map(fn(DoctrineApartment $a) => $this->toDomain($a), $doctrineApartments);
     }
 
     public function save(DomainApartment $domainApartment): void
