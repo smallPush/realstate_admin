@@ -10,15 +10,18 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class VapiAssistantService implements VapiAssistantServiceInterface
 {
     private string $apiKey;
+    private string $baseUrl;
     private ?string $assistantId;
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         string $vapiApiKey,
+        string $vapiBaseUrl,
         ?string $vapiAssistantId = null
     ) {
         $this->apiKey = $vapiApiKey;
+        $this->baseUrl = rtrim($vapiBaseUrl, '/');
         $this->assistantId = $vapiAssistantId;
     }
 
@@ -56,13 +59,13 @@ class VapiAssistantService implements VapiAssistantServiceInterface
         try {
             if (!empty($this->assistantId)) {
                 // Update existing assistant
-                $response = $this->httpClient->request('PATCH', 'https://api.vapi.ai/assistant/' . $this->assistantId, $options);
+                $response = $this->httpClient->request('PATCH', $this->baseUrl . '/assistant/' . $this->assistantId, $options);
                 $this->logger->info('Vapi: updated assistant {id}', ['id' => $this->assistantId]);
                 $data = $response->toArray();
                 return $data['id'] ?? $this->assistantId;
             } else {
                 // Create new assistant
-                $response = $this->httpClient->request('POST', 'https://api.vapi.ai/assistant', $options);
+                $response = $this->httpClient->request('POST', $this->baseUrl . '/assistant', $options);
                 $data = $response->toArray();
 
                 if (!isset($data['id'])) {

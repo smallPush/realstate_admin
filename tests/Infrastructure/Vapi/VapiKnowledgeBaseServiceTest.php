@@ -25,6 +25,7 @@ class VapiKnowledgeBaseServiceTest extends TestCase
             $apartmentRepositoryMock,
             $loggerMock,
             '',
+            'https://api.vapi.ai',
             '/tmp'
         );
 

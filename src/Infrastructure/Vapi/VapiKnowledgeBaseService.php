@@ -12,6 +12,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
 {
     private string $apiKey;
+    private string $baseUrl;
     private string $fileIdPath;
 
     public function __construct(
@@ -19,9 +20,11 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         private readonly ApartmentRepositoryInterface $apartmentRepository,
         private readonly LoggerInterface $logger,
         string $vapiApiKey,
+        string $vapiBaseUrl,
         string $shareDir,
     ) {
         $this->apiKey = $vapiApiKey;
+        $this->baseUrl = rtrim($vapiBaseUrl, '/');
         $this->fileIdPath = $shareDir . '/vapi_file_id.txt';
     }
 
@@ -106,7 +109,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         }
 
         try {
-            $response = $this->httpClient->request('DELETE', 'https://api.vapi.ai/file/' . $previousFileId, [
+            $response = $this->httpClient->request('DELETE', $this->baseUrl . '/file/' . $previousFileId, [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
                 ],
@@ -151,7 +154,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
             $headers = $formData->getPreparedHeaders()->toArray();
             $headers[] = 'Authorization: Bearer ' . $this->apiKey;
 
-            $response = $this->httpClient->request('POST', 'https://api.vapi.ai/file', [
+            $response = $this->httpClient->request('POST', $this->baseUrl . '/file', [
                 'headers' => $headers,
                 'body' => $formData->bodyToIterable(),
             ]);
