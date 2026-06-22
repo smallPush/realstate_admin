@@ -44,6 +44,59 @@ class ApartmentControllerTest extends TestCase
         $this->controller->setContainer($this->containerMock);
     }
 
+    public function testEditThrowsAccessDeniedExceptionForNonAdminWhenApartmentHasNoGroups(): void
+    {
+        $userMock = $this->createMock(\App\Infrastructure\Persistence\Doctrine\Entity\User::class);
+        $userMock->expects($this->once())
+            ->method('getApartmentGroups')
+            ->willReturn(new \Doctrine\Common\Collections\ArrayCollection());
+
+        $tokenMock = $this->createMock(\Symfony\Component\Security\Core\Authentication\Token\TokenInterface::class);
+        $tokenMock->expects($this->any())
+            ->method('getUser')
+            ->willReturn($userMock);
+
+        $tokenStorageMock = $this->createMock(\Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface::class);
+        $tokenStorageMock->expects($this->any())
+            ->method('getToken')
+            ->willReturn($tokenMock);
+
+        $authCheckerMock = $this->createMock(\Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface::class);
+        $authCheckerMock->expects($this->once())
+            ->method('isGranted')
+            ->with('ROLE_ADMIN')
+            ->willReturn(false);
+
+        $this->containerMock = $this->createMock(ContainerInterface::class);
+        $this->controller->setContainer($this->containerMock);
+
+        $this->containerMock->expects($this->any())
+            ->method('has')
+            ->willReturnMap([
+                ['security.authorization_checker', true],
+                ['security.token_storage', true],
+            ]);
+
+        $this->containerMock->expects($this->any())
+            ->method('get')
+            ->willReturnMap([
+                ['security.authorization_checker', $authCheckerMock],
+                ['security.token_storage', $tokenStorageMock],
+            ]);
+
+        $request = new \Symfony\Component\HttpFoundation\Request();
+
+        $apartmentMock = $this->createMock(\App\Infrastructure\Persistence\Doctrine\Entity\Apartment::class);
+        $apartmentMock->expects($this->once())
+            ->method('getApartmentGroups')
+            ->willReturn(new \Doctrine\Common\Collections\ArrayCollection());
+
+        $this->expectException(\Symfony\Component\Security\Core\Exception\AccessDeniedException::class);
+        $this->expectExceptionMessage('No tienes permiso para editar este apartamento.');
+
+        $this->controller->edit($request, $apartmentMock);
+    }
+
     public function testPublicListReturnsResponseWithRenderedTwigTemplate(): void
     {
         $this->containerMock->expects($this->any())

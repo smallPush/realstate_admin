@@ -97,7 +97,7 @@ class ApartmentController extends AbstractController
                 }
             }
 
-            if (!$hasAccess && !$doctrineApartment->getApartmentGroups()->isEmpty()) {
+            if (!$hasAccess) {
                 throw $this->createAccessDeniedException('No tienes permiso para editar este apartamento.');
             }
         }
