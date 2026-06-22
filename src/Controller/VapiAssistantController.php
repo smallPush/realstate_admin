@@ -15,6 +15,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class VapiAssistantController extends AbstractController
 {
     #[Route('/config', name: 'get_config', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function getConfig(GetVapiAssistantConfigQuery $query): JsonResponse
     {
         $config = $query->execute();
