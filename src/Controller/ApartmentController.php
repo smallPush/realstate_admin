@@ -90,11 +90,12 @@ class ApartmentController extends AbstractController
                 }
             }
 
-            foreach ($doctrineApartment->getApartmentGroups() as $aptGroup) {
-                if (in_array($aptGroup->getId(), $userGroupIds)) {
-                    $hasAccess = true;
-                    break;
-                }
+            $criteria = \Doctrine\Common\Collections\Criteria::create()
+                ->where(\Doctrine\Common\Collections\Criteria::expr()->in('id', $userGroupIds))
+                ->setMaxResults(1);
+
+            if (!$doctrineApartment->getApartmentGroups()->matching($criteria)->isEmpty()) {
+                $hasAccess = true;
             }
 
             if (!$hasAccess && !$doctrineApartment->getApartmentGroups()->isEmpty()) {
