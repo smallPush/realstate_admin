@@ -47,21 +47,7 @@ class ApartmentController extends AbstractController
         if ($this->isGranted('ROLE_ADMIN')) {
             $apartments = $getAllApartmentsQuery->execute();
         } else {
-            $groupIds = [];
-            foreach ($user->getApartmentGroups() as $group) {
-                // To support true hierarchy we would fetch all children IDs as well.
-                // For simplicity, we just fetch IDs of directly assigned groups + their direct children here.
-                // A better approach would be a recursive function in the repository, but this is a start.
-                $groupIds[] = $group->getId();
-                foreach ($group->getChildren() as $childGroup) {
-                    $groupIds[] = $childGroup->getId();
-                    // Let's go one more level deep just in case
-                    foreach ($childGroup->getChildren() as $grandChildGroup) {
-                        $groupIds[] = $grandChildGroup->getId();
-                    }
-                }
-            }
-            $groupIds = array_unique($groupIds);
+            $groupIds = $user->getAllGroupIds();
             $apartments = $getAllApartmentsQuery->execute($groupIds);
         }
 
@@ -79,16 +65,7 @@ class ApartmentController extends AbstractController
             $user = $this->getUser();
             $hasAccess = false;
 
-            $userGroupIds = [];
-            foreach ($user->getApartmentGroups() as $group) {
-                $userGroupIds[] = $group->getId();
-                foreach ($group->getChildren() as $childGroup) {
-                    $userGroupIds[] = $childGroup->getId();
-                    foreach ($childGroup->getChildren() as $grandChildGroup) {
-                        $userGroupIds[] = $grandChildGroup->getId();
-                    }
-                }
-            }
+            $userGroupIds = $user->getAllGroupIds();
 
             foreach ($doctrineApartment->getApartmentGroups() as $aptGroup) {
                 if (in_array($aptGroup->getId(), $userGroupIds)) {
