@@ -150,4 +150,22 @@ class ApartmentGroup
 
         return $this;
     }
+
+    /**
+     * @return int[]
+     */
+    public function getAllRecursiveIds(): array
+    {
+        $ids = [];
+        $this->collectIds($ids);
+        return array_unique($ids);
+    }
+
+    private function collectIds(array &$ids): void
+    {
+        $ids[] = $this->getId();
+        foreach ($this->getChildren() as $child) {
+            $child->collectIds($ids);
+        }
+    }
 }
