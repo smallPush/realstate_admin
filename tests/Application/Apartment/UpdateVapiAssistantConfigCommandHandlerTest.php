@@ -49,6 +49,10 @@ class UpdateVapiAssistantConfigCommandHandlerTest extends TestCase
         $this->vapiService->expects($this->once())
             ->method('syncAssistant');
 
+        $this->logger->expects($this->once())
+            ->method('info')
+            ->with('Successfully synced updated Assistant config with Vapi.');
+
         $this->handler->execute($command);
     }
 
@@ -68,6 +72,10 @@ class UpdateVapiAssistantConfigCommandHandlerTest extends TestCase
         $this->vapiService->expects($this->once())
             ->method('syncAssistant')
             ->with($existingConfig);
+
+        $this->logger->expects($this->once())
+            ->method('info')
+            ->with('Successfully synced updated Assistant config with Vapi.');
 
         $this->handler->execute($command);
 
@@ -90,7 +98,7 @@ class UpdateVapiAssistantConfigCommandHandlerTest extends TestCase
 
         $this->logger->expects($this->once())
             ->method('error')
-            ->with('Failed to sync Vapi Assistant config to API: Sync failed');
+            ->with('Failed to sync Assistant config with Vapi: Sync failed');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Sync failed');
