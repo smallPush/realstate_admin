@@ -63,7 +63,8 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
 
     public function save(DomainApartment $domainApartment): void
     {
-        $this->persistDomain($domainApartment);
+        $doctrineApartment = $domainApartment->getId() !== null ? $this->find($domainApartment->getId()) : null;
+        $this->persistDomain($domainApartment, $doctrineApartment);
         $this->getEntityManager()->flush();
     }
 
@@ -89,10 +90,6 @@ class ApartmentRepository extends ServiceEntityRepository implements ApartmentRe
     private function persistDomain(DomainApartment $domainApartment, ?DoctrineApartment $doctrineApartment = null): void
     {
         $em = $this->getEntityManager();
-
-        if ($doctrineApartment === null && $domainApartment->getId() !== null) {
-            $doctrineApartment = $this->find($domainApartment->getId());
-        }
 
         if (!$doctrineApartment) {
             $doctrineApartment = new DoctrineApartment();
