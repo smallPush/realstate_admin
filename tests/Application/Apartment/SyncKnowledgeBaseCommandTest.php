@@ -6,7 +6,7 @@ use App\Application\Apartment\Command\SyncKnowledgeBaseCommand;
 use App\Domain\Apartment\VapiKnowledgeBaseServiceInterface;
 use PHPUnit\Framework\TestCase;
 
-class SyncKnowledgeBaseCommandTest extends TestCase
+final class SyncKnowledgeBaseCommandTest extends TestCase
 {
     public function testExecuteCallsSyncKnowledgeBase(): void
     {
