@@ -7,8 +7,9 @@ use App\Infrastructure\Vapi\VapiKnowledgeBaseService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class VapiKnowledgeBaseServiceTest extends TestCase
+final class VapiKnowledgeBaseServiceTest extends TestCase
 {
     public function testSyncKnowledgeBaseSkipsIfApiKeyIsEmpty(): void
     {
@@ -30,5 +31,61 @@ class VapiKnowledgeBaseServiceTest extends TestCase
         );
 
         $service->syncKnowledgeBase();
+    }
+
+    public function testSyncKnowledgeBaseWithEmptyApartments(): void
+    {
+        $httpClientMock = $this->createMock(HttpClientInterface::class);
+        $apartmentRepositoryMock = $this->createMock(ApartmentRepositoryInterface::class);
+        $loggerMock = $this->createMock(LoggerInterface::class);
+        $responseMock = $this->createMock(ResponseInterface::class);
+
+        $apartmentRepositoryMock->expects($this->once())
+            ->method('findAvailable')
+            ->willReturn([]);
+
+        $apartmentRepositoryMock->expects($this->once())
+            ->method('saveAll')
+            ->with([]);
+
+        $responseMock->expects($this->once())
+            ->method('toArray')
+            ->willReturn(['id' => 'file-123']);
+
+        $httpClientMock->expects($this->once())
+            ->method('request')
+            ->with(
+                'POST',
+                'https://api.vapi.ai/file',
+                $this->callback(function (array $options) {
+                    $bodyIterable = $options['body'];
+                    $content = '';
+                    foreach ($bodyIterable as $chunk) {
+                        $content .= $chunk;
+                    }
+                    return str_contains($content, 'Total de apartamentos disponibles: 0');
+                })
+            )
+            ->willReturn($responseMock);
+
+        $tmpShareDir = sys_get_temp_dir() . '/vapi_test_' . uniqid();
+        mkdir($tmpShareDir, 0777, true);
+
+        $service = new VapiKnowledgeBaseService(
+            $httpClientMock,
+            $apartmentRepositoryMock,
+            $loggerMock,
+            'fake-api-key',
+            $tmpShareDir,
+            'https://api.vapi.ai'
+        );
+
+        $service->syncKnowledgeBase();
+
+        // Cleanup
+        if (file_exists($tmpShareDir . '/vapi_file_id.txt')) {
+            unlink($tmpShareDir . '/vapi_file_id.txt');
+        }
+        rmdir($tmpShareDir);
     }
 }
