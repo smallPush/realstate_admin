@@ -38,9 +38,9 @@ class UpdateVapiAssistantConfigCommandHandler
 
         try {
             $this->vapiAssistantService->syncAssistant($config);
+            $this->logger->info('Successfully synced updated Assistant config with Vapi.');
         } catch (\Exception $e) {
-            $this->logger->error('Failed to sync Vapi Assistant config to API: ' . $e->getMessage());
-            // We may want to bubble up the exception or handle it, depending on the requirement.
+            $this->logger->error('Failed to sync Assistant config with Vapi: ' . $e->getMessage());
             throw $e;
         }
     }
