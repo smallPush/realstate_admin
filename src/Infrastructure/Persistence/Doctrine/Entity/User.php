@@ -130,4 +130,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    /**
+     * @return int[]
+     */
+    public function getAllGroupIds(): array
+    {
+        $groupIds = [];
+        foreach ($this->getApartmentGroups() as $group) {
+            foreach ($group->getAllRecursiveIds() as $id) {
+                $groupIds[] = $id;
+            }
+        }
+        return array_unique($groupIds);
+    }
 }
