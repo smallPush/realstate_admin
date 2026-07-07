@@ -3,9 +3,12 @@ FROM dunglas/frankenphp:1-php8.3-alpine AS frankenphp_upstream
 
 FROM frankenphp_upstream AS frankenphp_base
 
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 # Install system dependencies
 RUN apk add --no-cache \
     acl \
+    curl \
     file \
     gettext \
     git \

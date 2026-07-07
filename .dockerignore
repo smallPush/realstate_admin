@@ -1,7 +1,8 @@
 # Docker ignore
 .git/
-.docker/
-! .docker/frankenphp/
+.docker/*
+!.docker/frankenphp/
+!.docker/frankenphp/**
 compose.yaml
 compose.override.yaml
 docker-compose.yml

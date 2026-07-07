@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${APP_IMAGE:-realstate-admin:latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,8 +10,17 @@ services:
       APP_SECRET: ${APP_SECRET:-$ecretf0rt3st}
       VAPI_API_KEY: ${VAPI_API_KEY:-}
       CADDY_GLOBAL_OPTIONS: "local_certs"
-    ports:
-      - "80:80"
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2019/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - default
+      - dokploy-network
     depends_on:
       database:
         condition: service_healthy
@@ -31,3 +41,7 @@ services:
 
 volumes:
   database_data:
+
+networks:
+  dokploy-network:
+    external: true
