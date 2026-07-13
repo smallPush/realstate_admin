@@ -12,8 +12,20 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class VapiController extends AbstractController
 {
     #[Route('/api/vapi/apartments', name: 'api_vapi_apartments', methods: ['GET'])]
-    public function getAvailableApartments(GetAvailableApartmentsQuery $getAvailableApartmentsQuery): JsonResponse
-    {
+    public function getAvailableApartments(
+        Request $request,
+        GetAvailableApartmentsQuery $getAvailableApartmentsQuery,
+        #[Autowire(env: 'VAPI_WEBHOOK_SECRET')] string $webhookSecret = ''
+    ): JsonResponse {
+        if ($webhookSecret === '') {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $providedSecret = $request->headers->get('x-vapi-secret', '');
+        if (!hash_equals($webhookSecret, $providedSecret)) {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
         $apartments = $getAvailableApartmentsQuery->execute();
 
         $data = array_map(static fn($apartment) => [
