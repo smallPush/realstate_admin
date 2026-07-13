@@ -47,9 +47,9 @@ class ApartmentControllerTest extends TestCase
     public function testEditThrowsAccessDeniedExceptionForNonAdminWhenApartmentHasNoGroups(): void
     {
         $userMock = $this->createMock(\App\Infrastructure\Persistence\Doctrine\Entity\User::class);
-        $userMock->expects($this->once())
-            ->method('getApartmentGroups')
-            ->willReturn(new \Doctrine\Common\Collections\ArrayCollection());
+        $userMock->expects($this->any())
+            ->method('getId')
+            ->willReturn(1);
 
         $tokenMock = $this->createMock(\Symfony\Component\Security\Core\Authentication\Token\TokenInterface::class);
         $tokenMock->expects($this->any())
@@ -87,9 +87,22 @@ class ApartmentControllerTest extends TestCase
         $request = new \Symfony\Component\HttpFoundation\Request();
 
         $apartmentMock = $this->createMock(\App\Infrastructure\Persistence\Doctrine\Entity\Apartment::class);
-        $apartmentMock->expects($this->once())
-            ->method('getApartmentGroups')
-            ->willReturn(new \Doctrine\Common\Collections\ArrayCollection());
+
+        $repoMock = $this->createMock(\App\Infrastructure\Persistence\Doctrine\Repository\ApartmentGroupRepository::class);
+        $repoMock->expects($this->once())
+            ->method('getUserApartmentGroupIds')
+            ->with(1)
+            ->willReturn([]);
+
+        $reflection = new \ReflectionClass($this->controller);
+        $emProperty = $reflection->getProperty('entityManager');
+        $emProperty->setAccessible(true);
+        $emMock = $emProperty->getValue($this->controller);
+
+        $emMock->expects($this->once())
+            ->method('getRepository')
+            ->with(\App\Infrastructure\Persistence\Doctrine\Entity\ApartmentGroup::class)
+            ->willReturn($repoMock);
 
         $this->expectException(\Symfony\Component\Security\Core\Exception\AccessDeniedException::class);
         $this->expectExceptionMessage('No tienes permiso para editar este apartamento.');

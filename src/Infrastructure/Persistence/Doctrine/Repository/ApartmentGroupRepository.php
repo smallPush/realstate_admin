@@ -62,6 +62,35 @@ class ApartmentGroupRepository extends ServiceEntityRepository implements Apartm
         }
     }
 
+    /**
+     * @return int[]
+     */
+    public function getUserApartmentGroupIds(int $userId): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = '
+            WITH RECURSIVE group_tree AS (
+                SELECT ag.id
+                FROM apartment_group ag
+                INNER JOIN user_apartment_group uag ON uag.apartment_group_id = ag.id
+                WHERE uag.user_id = :userId
+
+                UNION ALL
+
+                SELECT ag.id
+                FROM apartment_group ag
+                INNER JOIN group_tree gt ON ag.parent_id = gt.id
+            )
+            SELECT DISTINCT id FROM group_tree
+        ';
+
+        $stmt = $conn->executeQuery($sql, ['userId' => $userId]);
+
+        // Ensure integer mapping
+        return array_map('intval', $stmt->fetchFirstColumn());
+    }
+
     private function persistDomain(DomainApartmentGroup $domainGroup): ApartmentGroup
     {
         $entity = null;

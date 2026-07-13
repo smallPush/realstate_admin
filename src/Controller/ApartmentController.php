@@ -7,6 +7,7 @@ use App\Application\Apartment\Command\UpdateApartmentCommand;
 use App\Application\Apartment\Query\GetAllApartmentsQuery;
 use App\Form\ApartmentType;
 use App\Infrastructure\Persistence\Doctrine\Entity\Apartment as DoctrineApartment;
+use App\Infrastructure\Persistence\Doctrine\Entity\ApartmentGroup;
 use App\Domain\Apartment\Apartment as DomainApartment;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,21 +48,7 @@ class ApartmentController extends AbstractController
         if ($this->isGranted('ROLE_ADMIN')) {
             $apartments = $getAllApartmentsQuery->execute();
         } else {
-            $groupIds = [];
-            foreach ($user->getApartmentGroups() as $group) {
-                // To support true hierarchy we would fetch all children IDs as well.
-                // For simplicity, we just fetch IDs of directly assigned groups + their direct children here.
-                // A better approach would be a recursive function in the repository, but this is a start.
-                $groupIds[] = $group->getId();
-                foreach ($group->getChildren() as $childGroup) {
-                    $groupIds[] = $childGroup->getId();
-                    // Let's go one more level deep just in case
-                    foreach ($childGroup->getChildren() as $grandChildGroup) {
-                        $groupIds[] = $grandChildGroup->getId();
-                    }
-                }
-            }
-            $groupIds = array_unique($groupIds);
+            $groupIds = $this->entityManager->getRepository(ApartmentGroup::class)->getUserApartmentGroupIds($user->getId());
             $apartments = $getAllApartmentsQuery->execute($groupIds);
         }
 
@@ -79,15 +66,10 @@ class ApartmentController extends AbstractController
             $user = $this->getUser();
             $hasAccess = false;
 
-            $userGroupIds = [];
-            foreach ($user->getApartmentGroups() as $group) {
-                $userGroupIds[] = $group->getId();
-                foreach ($group->getChildren() as $childGroup) {
-                    $userGroupIds[] = $childGroup->getId();
-                    foreach ($childGroup->getChildren() as $grandChildGroup) {
-                        $userGroupIds[] = $grandChildGroup->getId();
-                    }
-                }
+            $userGroupIds = $this->entityManager->getRepository(ApartmentGroup::class)->getUserApartmentGroupIds($user->getId());
+
+            if (empty($userGroupIds)) {
+                throw $this->createAccessDeniedException('No tienes permiso para editar este apartamento.');
             }
 
             $criteria = \Doctrine\Common\Collections\Criteria::create()
