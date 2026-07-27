@@ -49,13 +49,27 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
         // 3. Start uploading the new file (async)
         $uploadTask = $this->startUploadingFile($content);
 
-        // 4. Wait for both responses to complete
+        // 4. Wait for both responses to complete concurrently
+        $responses = [];
         if ($deleteTask) {
-            $this->finishDeletingPreviousFile($deleteTask['response'], $deleteTask['fileId']);
+            $responses[] = $deleteTask['response'];
         }
-        $success = false;
         if ($uploadTask) {
-            $success = $this->finishUploadingFile($uploadTask['response'], $uploadTask['tmpFilePath']);
+            $responses[] = $uploadTask['response'];
+        }
+
+        $success = false;
+        if (count($responses) > 0) {
+            foreach ($this->httpClient->stream($responses) as $response => $chunk) {
+                if ($chunk->isLast()) {
+                    if ($deleteTask && $response === $deleteTask['response']) {
+                        $this->finishDeletingPreviousFile($response, $deleteTask['fileId']);
+                    }
+                    if ($uploadTask && $response === $uploadTask['response']) {
+                        $success = $this->finishUploadingFile($response, $uploadTask['tmpFilePath']);
+                    }
+                }
+            }
         }
 
         if ($success) {
