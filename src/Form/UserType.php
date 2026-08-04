@@ -20,6 +20,10 @@ class UserType extends AbstractType
             ->add('username', TextType::class, [
                 'label' => 'Nombre de Usuario',
             ])
+            ->add('email', TextType::class, [
+                'label' => 'Email',
+                'required' => false,
+            ])
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
                 'first_options'  => ['label' => 'Contraseña'],

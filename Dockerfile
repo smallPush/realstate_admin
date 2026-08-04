@@ -19,7 +19,6 @@ RUN set -eux; \
     install-php-extensions \
         apcu \
         intl \
-        opcache \
         zip \
         pdo_pgsql \
     ;

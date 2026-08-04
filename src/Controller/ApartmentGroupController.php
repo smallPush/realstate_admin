@@ -74,6 +74,14 @@ class ApartmentGroupController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/show', name: 'apartment_group_show', methods: ['GET'])]
+    public function show(ApartmentGroup $group): Response
+    {
+        return $this->render('apartment_group/show.html.twig', [
+            'group' => $group,
+        ]);
+    }
+
     #[Route('/{id}', name: 'apartment_group_delete', methods: ['POST'])]
     public function delete(Request $request, ApartmentGroup $group): Response
     {

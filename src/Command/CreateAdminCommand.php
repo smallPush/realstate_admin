@@ -30,6 +30,7 @@ class CreateAdminCommand extends Command
         $this
             ->addArgument('username', InputArgument::REQUIRED, 'The username of the admin user')
             ->addArgument('password', InputArgument::OPTIONAL, 'The password of the admin user')
+            ->addArgument('email', InputArgument::OPTIONAL, 'The email of the admin user')
         ;
     }
 
@@ -50,6 +51,7 @@ class CreateAdminCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $username = $input->getArgument('username');
         $password = $input->getArgument('password');
+        $email = $input->getArgument('email');
 
         if (empty($password)) {
             $io->error('The password cannot be empty. Please provide it as an argument or in interactive mode.');
@@ -65,6 +67,10 @@ class CreateAdminCommand extends Command
             $io->note(sprintf('Creating new admin user: %s', $username));
         } else {
             $io->note(sprintf('Admin user already exists. Updating password for: %s', $username));
+        }
+
+        if ($email) {
+            $user->setEmail($email);
         }
 
         $user->setRoles(['ROLE_ADMIN']);

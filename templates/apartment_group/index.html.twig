@@ -3,52 +3,317 @@
 {% block title %}Grupos de Apartamentos{% endblock %}
 
 {% block body %}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h1 style="font-size: 1.5rem; color: var(--text-primary); margin: 0;">Grupos de Apartamentos</h1>
-        <a href="{{ path('apartment_group_new') }}" class="btn btn-primary">
-            <span>+</span> Nuevo Grupo
-        </a>
+<style>
+    .groups-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2.5rem;
+        gap: 1rem;
+    }
+
+    .groups-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .groups-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0.35rem 0 0 0;
+    }
+
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .group-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .group-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent), #a855f7);
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .group-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 32px rgba(108, 92, 231, 0.18);
+    }
+
+    .group-card:hover::before {
+        opacity: 1;
+    }
+
+    .group-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        gap: 0.75rem;
+    }
+
+    .group-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--accent-glow);
+        border: 1px solid rgba(108, 92, 231, 0.25);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        transition: var(--transition);
+    }
+
+    .group-card:hover .group-icon {
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .group-id {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        font-family: 'Inter', monospace;
+        background: var(--bg-card);
+        padding: 0.25rem 0.6rem;
+        border-radius: 100px;
+        border: 1px solid var(--border);
+    }
+
+    .group-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.35rem;
+    }
+
+    .group-parent {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .group-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .apartment-count {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .apartment-count strong {
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        cursor: pointer;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .btn-icon:hover {
+        background: var(--bg-hover);
+        color: var(--text-primary);
+    }
+
+    .btn-icon.danger:hover {
+        background: var(--danger-bg);
+        color: var(--danger);
+        border-color: rgba(255, 107, 107, 0.3);
+    }
+
+    .arrow-icon {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        transition: var(--transition);
+    }
+
+    .group-card:hover .arrow-icon {
+        color: var(--accent);
+        transform: translateX(3px);
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-item {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .stat-item .stat-icon {
+        font-size: 1.4rem;
+    }
+
+    .stat-item .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-item .stat-label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+</style>
+
+<div class="groups-header">
+    <div>
+        <h1>Grupos de Apartamentos</h1>
+        <p>Organiza y gestiona los pisos por grupos o edificios</p>
+    </div>
+    <a href="{{ path('apartment_group_new') }}" class="btn btn-primary">
+        <span>+</span> Nuevo Grupo
+    </a>
+</div>
+
+{% if groups|length > 0 %}
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-icon">🏢</span>
+            <div>
+                <div class="stat-value">{{ groups|length }}</div>
+                <div class="stat-label">Grupos totales</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">🏠</span>
+            <div>
+                <div class="stat-value">
+                    {% set total = 0 %}
+                    {% for g in groups %}{% set total = total + g.apartments|length %}{% endfor %}
+                    {{ total }}
+                </div>
+                <div class="stat-label">Pisos asignados</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">📁</span>
+            <div>
+                <div class="stat-value">
+                    {% set roots = 0 %}
+                    {% for g in groups %}{% if g.parent is null %}{% set roots = roots + 1 %}{% endif %}{% endfor %}
+                    {{ roots }}
+                </div>
+                <div class="stat-label">Grupos raíz</div>
+            </div>
+        </div>
     </div>
 
-    <div class="table-card">
-        {% if groups|length > 0 %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Grupo Padre</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for group in groups %}
-                    <tr>
-                        <td style="color: var(--text-muted);">#{{ group.id }}</td>
-                        <td style="font-weight: 500;">{{ group.name }}</td>
-                        <td>{{ group.parent ? group.parent.name : '-' }}</td>
-                        <td>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <a href="{{ path('apartment_group_edit', {'id': group.id}) }}" class="btn-edit">
-                                    Editar
-                                </a>
-                                <form method="post" action="{{ path('apartment_group_delete', {'id': group.id}) }}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este grupo?');">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ group.id) }}">
-                                    <button class="btn-edit" style="color: var(--danger); border-color: rgba(255, 107, 107, 0.2); background: var(--danger-bg);">
-                                        Eliminar
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div class="empty-state">
-                <div class="icon">🏢</div>
-                <p>No hay grupos registrados.</p>
+    <div class="groups-grid">
+        {% for group in groups %}
+            <div class="group-card-wrapper">
+                <a href="{{ path('apartment_group_show', {'id': group.id}) }}" class="group-card">
+                    <div class="group-card-header">
+                        <div class="group-icon">🏢</div>
+                        <span class="group-id">#{{ group.id }}</span>
+                    </div>
+
+                    <div class="group-name">{{ group.name }}</div>
+
+                    <div class="group-parent">
+                        {% if group.parent %}
+                            <span>📂</span> {{ group.parent.name }}
+                        {% else %}
+                            <span>🌐</span> Grupo raíz
+                        {% endif %}
+                    </div>
+
+                    <div class="group-card-footer">
+                        <div class="apartment-count">
+                            <span>🏠</span>
+                            <strong>{{ group.apartments|length }}</strong>
+                            <span>{{ group.apartments|length == 1 ? 'piso' : 'pisos' }}</span>
+                        </div>
+                        <span class="arrow-icon">→</span>
+                    </div>
+                </a>
+
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; padding: 0 0.25rem;">
+                    <a href="{{ path('apartment_group_edit', {'id': group.id}) }}" class="btn-edit" style="flex:1; justify-content:center;">
+                        ✏️ Editar
+                    </a>
+                    <form method="post" action="{{ path('apartment_group_delete', {'id': group.id}) }}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este grupo?');" style="flex:1;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ group.id) }}">
+                        <button class="btn-edit" type="submit" style="width:100%; justify-content:center; color: var(--danger); border-color: rgba(255, 107, 107, 0.2); background: var(--danger-bg);">
+                            🗑️ Eliminar
+                        </button>
+                    </form>
+                </div>
             </div>
-        {% endif %}
+        {% endfor %}
     </div>
+{% else %}
+    <div class="empty-state">
+        <div class="icon">🏢</div>
+        <p>No hay grupos registrados.</p>
+        <a href="{{ path('apartment_group_new') }}" class="btn btn-primary" style="margin-top: 1.5rem;">
+            + Crear primer grupo
+        </a>
+    </div>
+{% endif %}
 {% endblock %}
