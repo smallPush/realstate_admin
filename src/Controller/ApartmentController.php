@@ -89,6 +89,11 @@ class ApartmentController extends AbstractController
             }
         }
         $form = $this->createForm(ApartmentType::class, $doctrineApartment);
+
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $form->remove('apartmentGroups');
+        }
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
