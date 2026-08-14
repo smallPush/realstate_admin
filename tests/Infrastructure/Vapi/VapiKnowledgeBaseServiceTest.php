@@ -46,19 +46,35 @@ class VapiKnowledgeBaseServiceTest extends TestCase
             ->method('findAvailable')
             ->willReturn([]);
 
+        $responseMock = $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
+        $responseMock->method('toArray')->willReturn(['id' => 'new_file_id']);
+
         $httpClientMock->expects($this->exactly(2))
             ->method('request')
-            ->willReturnCallback(function(string $method, string $url, array $options) {
+            ->willReturnCallback(function(string $method, string $url, array $options) use ($responseMock) {
                 if ($method === 'DELETE') {
                     throw new \Exception('Delete failed');
                 }
                 if ($method === 'POST') {
-                    $responseMock = $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
-                    $responseMock->method('toArray')->willReturn(['id' => 'new_file_id']);
                     return $responseMock;
                 }
 
                 return $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
+            });
+
+        $chunkMock = $this->createMock(\Symfony\Contracts\HttpClient\ChunkInterface::class);
+        $chunkMock->method('isLast')->willReturn(true);
+
+        $httpClientMock->expects($this->once())
+            ->method('stream')
+            ->willReturnCallback(function($responses) use ($chunkMock) {
+                // Return a generator
+                $gen = function() use ($responses, $chunkMock) {
+                    foreach($responses as $response) {
+                        yield $response => $chunkMock;
+                    }
+                };
+                return new \Symfony\Component\HttpClient\Response\ResponseStream($gen());
             });
 
         $loggerMock->expects($this->once())
