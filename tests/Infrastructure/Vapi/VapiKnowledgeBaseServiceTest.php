@@ -55,10 +55,13 @@ class VapiKnowledgeBaseServiceTest extends TestCase
                 if ($method === 'POST') {
                     $responseMock = $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
                     $responseMock->method('toArray')->willReturn(['id' => 'new_file_id']);
+                    $responseMock->method('getStatusCode')->willReturn(201);
                     return $responseMock;
                 }
 
-                return $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
+                $responseMock = $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
+                $responseMock->method('getStatusCode')->willReturn(200);
+                return $responseMock;
             });
 
         $loggerMock->expects($this->once())
