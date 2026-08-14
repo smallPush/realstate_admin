@@ -65,7 +65,7 @@ class VapiAssistantController extends AbstractController
         try {
             $handler->execute($command);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Failed to sync with Vapi: ' . $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['error' => 'An unexpected error occurred while syncing with Vapi.'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse([

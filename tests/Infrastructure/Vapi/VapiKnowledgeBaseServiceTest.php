@@ -61,6 +61,18 @@ class VapiKnowledgeBaseServiceTest extends TestCase
                 return $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
             });
 
+        $httpClientMock->method('stream')
+            ->willReturnCallback(function ($responses) {
+                $generator = function () use ($responses) {
+                    foreach ($responses as $response) {
+                        $chunk = $this->createMock(\Symfony\Contracts\HttpClient\ChunkInterface::class);
+                        $chunk->method('isLast')->willReturn(true);
+                        yield $response => $chunk;
+                    }
+                };
+                return new \Symfony\Component\HttpClient\Response\ResponseStream($generator());
+            });
+
         $loggerMock->expects($this->once())
             ->method('warning')
             ->with(
