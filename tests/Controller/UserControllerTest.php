@@ -201,4 +201,33 @@ class UserControllerTest extends WebTestCase
         $deletedUser = $this->entityManager->getRepository(User::class)->find($userToDelete->getId());
         $this->assertNull($deletedUser);
     }
+
+    public function testAdminCannotDeleteSelf(): void
+    {
+        $admin = $this->createAdminUser();
+        $this->client->loginUser($admin);
+
+        $this->client->request('GET', '/admin/users/');
+        $crawler = $this->client->getCrawler();
+        $deleteForms = $crawler->filter('form[action="/admin/users/' . $admin->getId() . '"]');
+
+        if ($deleteForms->count() > 0) {
+            $form = $deleteForms->first()->form();
+            $this->client->submit($form);
+        } else {
+            $container = static::getContainer();
+            $csrfTokenManager = $container->get('security.csrf.token_manager');
+            $token = $csrfTokenManager->getToken('delete'.$admin->getId())->getValue();
+
+            $this->client->request('POST', '/admin/users/' . $admin->getId(), [
+                '_token' => $token,
+            ]);
+        }
+
+        $this->assertResponseRedirects('/admin/users/');
+
+        $this->entityManager->clear();
+        $notDeletedUser = $this->entityManager->getRepository(User::class)->find($admin->getId());
+        $this->assertNotNull($notDeletedUser);
+    }
 }
