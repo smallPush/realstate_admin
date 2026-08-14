@@ -63,6 +63,9 @@ class ApartmentController extends AbstractController
     ): Response {
         if (!$this->isGranted('ROLE_ADMIN')) {
             $user = $this->getUser();
+            if (!$user) {
+                throw $this->createAccessDeniedException();
+            }
             $hasAccess = false;
 
             $userGroupIds = [];
@@ -89,6 +92,11 @@ class ApartmentController extends AbstractController
             }
         }
         $form = $this->createForm(ApartmentType::class, $doctrineApartment);
+
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $form->remove('apartmentGroups');
+        }
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
