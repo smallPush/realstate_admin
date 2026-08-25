@@ -36,7 +36,7 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
     {
         if (empty($this->apiKey) || str_contains($this->apiKey, 'your_vapi_api_key_here')) {
             $this->logger->warning('VAPI_API_KEY is not configured or is a placeholder — skipping Knowledge Base sync.');
-            return;
+            throw new \RuntimeException('VAPI_API_KEY is not configured.');
         }
 
         // 1. Generate the document content

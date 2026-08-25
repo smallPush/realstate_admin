@@ -135,4 +135,42 @@ class VapiControllerTest extends TestCase
         $this->assertArrayHasKey('error', $content);
         $this->assertEquals('Invalid JSON payload', $content['error']);
     }
+
+    public function testVapiWebhookHandlesCurrentToolCallsFormat(): void
+    {
+        $controller = new VapiController();
+        $queryMock = $this->createMock(GetAvailableApartmentsQuery::class);
+        $queryMock->expects($this->once())
+            ->method('execute')
+            ->willReturn([
+                new Apartment('Piso Centro', 'Calle Mayor 1', 1200, true, 1),
+            ]);
+
+        $request = new Request(
+            [],
+            [],
+            [],
+            [],
+            [],
+            ['HTTP_X_VAPI_SECRET' => 'test_secret'],
+            json_encode([
+                'message' => [
+                    'type' => 'tool-calls',
+                    'toolCallList' => [[
+                        'id' => 'tool-call-1',
+                        'name' => 'getAvailableApartments',
+                        'arguments' => [],
+                    ]],
+                ],
+            ], JSON_THROW_ON_ERROR)
+        );
+
+        $response = $controller->vapiWebhook($request, $queryMock, 'test_secret');
+
+        $this->assertSame(JsonResponse::HTTP_OK, $response->getStatusCode());
+        $content = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('tool-call-1', $content['results'][0]['toolCallId']);
+        $result = json_decode($content['results'][0]['result'], true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('Piso Centro', $result['apartments'][0]['name']);
+    }
 }

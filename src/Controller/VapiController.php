@@ -68,13 +68,17 @@ class VapiController extends AbstractController
             return new JsonResponse(['error' => 'Invalid webhook format'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Manejar el webhook de Vapi para funciones, por ejemplo `getAvailableApartments`
-        if (isset($content['message']['type']) && $content['message']['type'] === 'function-call') {
-            $functionCall = $content['message']['functionCall'];
-            
-            if (isset($functionCall['name']) && $functionCall['name'] === 'getAvailableApartments') {
+        $message = $content['message'];
+        $toolCalls = match ($message['type'] ?? null) {
+            'tool-calls' => $message['toolCallList'] ?? [],
+            'function-call' => isset($message['functionCall']) ? [$message['functionCall']] : [],
+            default => [],
+        };
+
+        foreach ($toolCalls as $toolCall) {
+            if (($toolCall['name'] ?? null) === 'getAvailableApartments') {
                 $apartments = $getAvailableApartmentsQuery->execute();
-                
+
                 $data = array_map(static fn($apartment) => [
                     'name' => $apartment->getName(),
                     'address' => $apartment->getAddress(),
@@ -84,7 +88,7 @@ class VapiController extends AbstractController
                 return new JsonResponse([
                     'results' => [
                         [
-                            'toolCallId' => $functionCall['id'] ?? null,
+                            'toolCallId' => $toolCall['id'] ?? null,
                             'result' => json_encode([
                                 'message' => 'Estos son los pisos disponibles.',
                                 'apartments' => $data
@@ -94,7 +98,7 @@ class VapiController extends AbstractController
                 ]);
             }
         }
-        
+
         // Si no es un tool call, devolver la base de conocimiento o mensaje genérico
         return new JsonResponse([
             'message' => 'Webhook received successfully'

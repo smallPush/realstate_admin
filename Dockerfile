@@ -32,7 +32,6 @@ COPY ./.docker/frankenphp/conf.d/app.ini $PHP_INI_DIR/conf.d/
 
 # Production environment
 ENV APP_ENV=prod
-ENV FRANKENPHP_CONFIG="import /etc/caddy/Caddyfile"
 
 # Use the production configuration
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -56,3 +55,5 @@ RUN set -eux; \
 # Set up healthcheck
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
     CMD curl -f http://localhost:2019/metrics || exit 1
+
+CMD ["--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

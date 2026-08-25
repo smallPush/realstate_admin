@@ -6,11 +6,13 @@ use App\Domain\Apartment\ApartmentRepositoryInterface;
 use App\Infrastructure\Vapi\VapiKnowledgeBaseService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class VapiKnowledgeBaseServiceTest extends TestCase
 {
-    public function testSyncKnowledgeBaseSkipsIfApiKeyIsEmpty(): void
+    public function testSyncKnowledgeBaseThrowsIfApiKeyIsEmpty(): void
     {
         $httpClientMock = $this->createMock(HttpClientInterface::class);
         $apartmentRepositoryMock = $this->createMock(ApartmentRepositoryInterface::class);
@@ -29,12 +31,14 @@ class VapiKnowledgeBaseServiceTest extends TestCase
             'https://api.vapi.ai'
         );
 
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('VAPI_API_KEY is not configured.');
+
         $service->syncKnowledgeBase();
     }
 
     public function testSyncKnowledgeBaseLogsWarningOnDeleteException(): void
     {
-        $httpClientMock = $this->createMock(HttpClientInterface::class);
         $apartmentRepositoryMock = $this->createMock(ApartmentRepositoryInterface::class);
         $loggerMock = $this->createMock(LoggerInterface::class);
 
@@ -46,20 +50,13 @@ class VapiKnowledgeBaseServiceTest extends TestCase
             ->method('findAvailable')
             ->willReturn([]);
 
-        $httpClientMock->expects($this->exactly(2))
-            ->method('request')
-            ->willReturnCallback(function(string $method, string $url, array $options) {
-                if ($method === 'DELETE') {
-                    throw new \Exception('Delete failed');
-                }
-                if ($method === 'POST') {
-                    $responseMock = $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
-                    $responseMock->method('toArray')->willReturn(['id' => 'new_file_id']);
-                    return $responseMock;
-                }
+        $httpClient = new MockHttpClient(static function (string $method): MockResponse {
+            if ($method === 'DELETE') {
+                throw new \Exception('Delete failed');
+            }
 
-                return $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
-            });
+            return new MockResponse(json_encode(['id' => 'new_file_id'], JSON_THROW_ON_ERROR));
+        });
 
         $loggerMock->expects($this->once())
             ->method('warning')
@@ -69,7 +66,7 @@ class VapiKnowledgeBaseServiceTest extends TestCase
             );
 
         $service = new VapiKnowledgeBaseService(
-            $httpClientMock,
+            $httpClient,
             $apartmentRepositoryMock,
             $loggerMock,
             'valid_api_key',
