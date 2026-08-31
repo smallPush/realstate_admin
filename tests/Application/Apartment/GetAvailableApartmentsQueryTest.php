@@ -7,8 +7,23 @@ use App\Domain\Apartment\Apartment;
 use App\Domain\Apartment\ApartmentRepositoryInterface;
 use PHPUnit\Framework\TestCase;
 
-class GetAvailableApartmentsQueryTest extends TestCase
+final class GetAvailableApartmentsQueryTest extends TestCase
 {
+    public function testExecuteReturnsEmptyArrayWhenNoApartmentsAvailable(): void
+    {
+        $repositoryMock = $this->createMock(ApartmentRepositoryInterface::class);
+
+        $repositoryMock->expects($this->once())
+            ->method('findAvailable')
+            ->willReturn([]);
+
+        $query = new GetAvailableApartmentsQuery($repositoryMock);
+        $result = $query->execute();
+
+        $this->assertEmpty($result);
+        $this->assertIsArray($result);
+    }
+
     public function testExecuteReturnsAvailableApartments(): void
     {
         $repositoryMock = $this->createMock(ApartmentRepositoryInterface::class);
