@@ -6,8 +6,8 @@ services:
       dockerfile: Dockerfile
     environment:
       # These should be overridden by Dokploy's environment variables
-      DATABASE_URL: ${DATABASE_URL:-postgresql://app:!ChangeMe!@database:5432/app?serverVersion=16&charset=utf8}
-      APP_SECRET: ${APP_SECRET:-$ecretf0rt3st}
+      DATABASE_URL: ${DATABASE_URL:?Error DATABASE_URL is required}
+      APP_SECRET: ${APP_SECRET:?Error APP_SECRET is required}
       VAPI_API_KEY: ${VAPI_API_KEY:-}
       CADDY_GLOBAL_OPTIONS: "local_certs"
     expose:
