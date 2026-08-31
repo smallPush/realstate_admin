@@ -39,17 +39,17 @@ class VapiKnowledgeBaseService implements VapiKnowledgeBaseServiceInterface
             throw new \RuntimeException('VAPI_API_KEY is not configured.');
         }
 
-        // 1. Generate the document content
+        // Generate the document content
         $availableApartments = $this->apartmentRepository->findAvailable();
         $content = $this->generateDocument($availableApartments);
 
-        // 2. Start deleting the previous file if it exists (async)
+        // Start deleting the previous file if it exists (async)
         $deleteTask = $this->startDeletingPreviousFile();
 
-        // 3. Start uploading the new file (async)
+        // Start uploading the new file (async)
         $uploadTask = $this->startUploadingFile($content);
 
-        // 4. Wait for both responses to complete concurrently
+        // Wait for both responses to complete concurrently
         $responses = [];
         if ($deleteTask) {
             $responses[] = $deleteTask['response'];
