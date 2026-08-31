@@ -132,6 +132,6 @@ class VapiAssistantControllerTest extends TestCase
 
         $this->assertSame(500, $response->getStatusCode());
         $content = json_decode($response->getContent(), true);
-        $this->assertStringContainsString('Failed to sync with Vapi: API error', $content['error']);
+        $this->assertStringContainsString('An unexpected error occurred while syncing with Vapi.', $content['error']);
     }
 }
